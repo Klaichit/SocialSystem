@@ -4,8 +4,10 @@
     { "id": "page-2", "name": "24senergy (ม่วง)" }
   ],
   "artboards": [
-    { "file": "SSCNews.dc.html", "x": 0,    "y": 0, "w": 1080, "h": 1350, "page": "page-1" },
-    { "file": "SSCStat.dc.html", "x": 1180, "y": 0, "w": 1080, "h": 1350, "page": "page-1" },
+    { "file": "SSCNews.dc.html",  "x": 0,    "y": 0,    "w": 1080, "h": 1350, "page": "page-1" },
+    { "file": "SSCStat.dc.html",  "x": 1180, "y": 0,    "w": 1080, "h": 1350, "page": "page-1" },
+    { "file": "SSCStory.dc.html", "x": 2360, "y": 0,    "w": 1080, "h": 1920, "page": "page-1" },
+    { "file": "SSCSpec.dc.html",  "x": 0,    "y": 2040, "w": 1240, "h": 1600, "page": "page-1" },
 
     { "file": "Main.dc.html",    "x": 0,    "y": 0,    "w": 1080, "h": 1350, "page": "page-2" },
     { "file": "Solar.dc.html",   "x": 1180, "y": 0,    "w": 1080, "h": 1350, "page": "page-2" },
@@ -16,8 +18,8 @@
     { "file": "Fonts.dc.html",   "x": 2520, "y": 1500, "w": 1240, "h": 1600, "page": "page-2" }
   ],
   "annotations": [
-    { "id": "ssc-note", "x": 0, "y": -230, "w": 1500, "page": "page-1", "text": "การ์ดข่าวสไตล์ SSC / siamsolar — แดง + ดำเมทัลลิก ตามงานจริงที่ใช้อยู่\nโลโก้ SSC กับช่องภาพยังเป็น placeholder · ยังไม่มีไฟล์โลโก้ในเครื่อง" },
-    { "id": "how-to-use", "x": 0, "y": -230, "w": 1400, "page": "page-2", "text": "ชุดเดิมที่ทำตามคู่มือแบรนด์ 24senergy (ม่วง) — เก็บไว้เผื่อใช้กับอีกแบรนด์\nแถวล่างคือสตอรี่ 9:16, ชีตสเปกแบรนด์ และชีตเทียบฟอนต์ไทย" }
+    { "id": "ssc-note", "x": 0, "y": -230, "w": 1500, "page": "page-1", "text": "SSC / siamsolar — แดง #E31E24 บนดำเมทัลลิก ตามงานจริงที่ใช้อยู่\nการ์ดข่าว · การ์ดตัวเลขใหญ่ · สตอรี่ 9:16 · ชีตสเปก\nโลโก้ SSC กับช่องภาพยังเป็น placeholder" },
+    { "id": "how-to-use", "x": 0, "y": -230, "w": 1400, "page": "page-2", "text": "24senergy — ม่วง #6A2DAF ตามคู่มือแบรนด์ในโปรเจกต์เว็บ\nการ์ดข่าว 4 แบบ · สตอรี่ 9:16 · ชีตสเปก · ชีตเทียบฟอนต์ไทย" }
   ],
   "launch": { "view": "canvas", "page": "page-1" }
 }

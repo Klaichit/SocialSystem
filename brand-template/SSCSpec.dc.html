@@ -1,0 +1,90 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Noto+Sans+Thai:wght@400;500;600;700;900&family=JetBrains+Mono:wght@500;700&display=swap">
+  <style>
+    body { margin: 0; background: #0B0B0D; font-family: 'Noto Sans Thai', sans-serif; }
+    a { color: #E31E24; } a:hover { color: #B3121A; }
+  </style>
+</helmet>
+<div style="width: 1240px; height: 1600px; box-sizing: border-box; padding: 56px; overflow: hidden; color: #ffffff; display: flex; flex-direction: column; gap: 36px; background-color: #0B0B0D; background-image: radial-gradient(900px 520px at 92% -8%, rgba(227,30,36,0.26), transparent 62%), repeating-linear-gradient(115deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 1px, transparent 1px, transparent 46px), linear-gradient(160deg, #16161A 0%, #0B0B0D 60%, #111116 100%);">
+
+  <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; border-bottom: 3px solid #E31E24; padding-bottom: 22px;">
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+      <div style="border: 1px dashed rgba(255,255,255,0.35); border-radius: 6px; padding: 8px 16px; font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; letter-spacing: 2px; color: rgba(255,255,255,0.55); align-self: flex-start;">SSC LOGO</div>
+      <div style="font-size: 34px; font-weight: 900; letter-spacing: -0.8px;">ระบบการ์ดข่าวโซเชียล</div>
+    </div>
+    <div style="font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 16px; letter-spacing: 1.6px; color: rgba(255,255,255,0.45); text-align: right; line-height: 1.7;">SSC NEWS CARD<br>v1 · 2569</div>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 16px;">
+    <div style="font-size: 13px; font-weight: 700; letter-spacing: 1.6px; color: rgba(255,255,255,0.45);">สีแบรนด์</div>
+    <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px;">
+      <div style="display: flex; flex-direction: column; gap: 8px;"><div style="height: 84px; border-radius: 8px; background: #E31E24;"></div><div style="font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700;">#E31E24</div><div style="font-size: 13px; color: rgba(255,255,255,0.45);">แดงหลัก</div></div>
+      <div style="display: flex; flex-direction: column; gap: 8px;"><div style="height: 84px; border-radius: 8px; background: #B3121A;"></div><div style="font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700;">#B3121A</div><div style="font-size: 13px; color: rgba(255,255,255,0.45);">แดงเข้ม (ไล่เฉด)</div></div>
+      <div style="display: flex; flex-direction: column; gap: 8px;"><div style="height: 84px; border-radius: 8px; background: #0B0B0D; border: 1px solid rgba(255,255,255,0.14);"></div><div style="font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700;">#0B0B0D</div><div style="font-size: 13px; color: rgba(255,255,255,0.45);">พื้นหลัง</div></div>
+      <div style="display: flex; flex-direction: column; gap: 8px;"><div style="height: 84px; border-radius: 8px; background: #16161A; border: 1px solid rgba(255,255,255,0.14);"></div><div style="font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700;">#16161A</div><div style="font-size: 13px; color: rgba(255,255,255,0.45);">แผงเทา</div></div>
+      <div style="display: flex; flex-direction: column; gap: 8px;"><div style="height: 84px; border-radius: 8px; background: #1A0A0C; border: 1px solid rgba(255,255,255,0.14);"></div><div style="font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700;">#1A0A0C</div><div style="font-size: 13px; color: rgba(255,255,255,0.45);">แถบล่าง</div></div>
+    </div>
+    <div style="font-size: 15px; color: rgba(255,255,255,0.45); line-height: 1.6;">มีสีเดียวคือแดง — หมวดข่าวแยกด้วย<strong style="color: rgba(255,255,255,0.75); font-weight: 600;">ข้อความบนริบบิ้น</strong> ไม่ใช่แยกด้วยสี ห้ามเพิ่มสีหมวดใหม่</div>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 16px;">
+    <div style="font-size: 13px; font-weight: 700; letter-spacing: 1.6px; color: rgba(255,255,255,0.45);">ตัวอักษร</div>
+    <div style="display: flex; flex-direction: column; gap: 14px;">
+      <div style="display: flex; align-items: baseline; gap: 24px; border-bottom: 1px solid rgba(255,255,255,0.12); padding-bottom: 14px;">
+        <div style="width: 230px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; color: #E31E24;">NOTO SANS THAI 900</div>
+        <div style="font-size: 38px; font-weight: 900; letter-spacing: -0.8px;">พาดหัว <span style="color: #E31E24;">ไฮไลต์แดง</span></div>
+      </div>
+      <div style="display: flex; align-items: baseline; gap: 24px; border-bottom: 1px solid rgba(255,255,255,0.12); padding-bottom: 14px;">
+        <div style="width: 230px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; color: #E31E24;">ANTON</div>
+        <div style="font-family: 'Anton', sans-serif; font-size: 44px; letter-spacing: -1px; color: #ffffff;">1,000,000 · 5 GW · 28.8</div>
+      </div>
+      <div style="display: flex; align-items: baseline; gap: 24px;">
+        <div style="width: 230px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; color: #E31E24;">JETBRAINS MONO</div>
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 24px; font-weight: 700; letter-spacing: 2px; color: rgba(255,255,255,0.7);">03 . 09 . 2569</div>
+      </div>
+    </div>
+    <div style="font-size: 15px; color: rgba(255,255,255,0.45); line-height: 1.6;">Anton ใช้กับตัวเลขใหญ่ที่เป็นพระเอกเท่านั้น · Mono ใช้กับวันที่และป้ายกำกับ · Anton ไม่มีสระไทย ห้ามใช้กับข้อความไทย</div>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 16px;">
+    <div style="font-size: 13px; font-weight: 700; letter-spacing: 1.6px; color: rgba(255,255,255,0.45);">โครงการ์ด 1080 × 1350</div>
+    <div style="display: flex; gap: 32px; align-items: flex-start;">
+      <div style="width: 232px; height: 290px; flex-shrink: 0; border: 1px solid rgba(255,255,255,0.16); border-radius: 6px; overflow: hidden; display: flex; flex-direction: column; background: #0B0B0D;">
+        <div style="height: 21px; flex-shrink: 0; background: #16161A; display: flex; align-items: center; padding: 0 10px;"><div style="font-family: 'JetBrains Mono', monospace; font-size: 8px; color: rgba(255,255,255,0.6); letter-spacing: 1px;">HEADER 96</div></div>
+        <div style="height: 129px; flex-shrink: 0; background: linear-gradient(120deg, rgba(227,30,36,0.7), #1A1A1F); display: flex; align-items: center; justify-content: center; position: relative;"><div style="position: absolute; left: 0; top: 8px; background: #E31E24; padding: 3px 14px 3px 8px; clip-path: polygon(0 0, 100% 0, calc(100% - 8px) 100%, 0 100%); font-size: 7px; font-weight: 700;">หมวด</div><div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: rgba(255,255,255,0.85); letter-spacing: 1px;">IMAGE 600</div></div>
+        <div style="flex-grow: 1; display: flex; align-items: center; justify-content: center;"><div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: rgba(255,255,255,0.55); letter-spacing: 1px;">TEXT 540</div></div>
+        <div style="height: 24px; flex-shrink: 0; background: #1A0A0C; border-top: 2px solid #E31E24; display: flex; align-items: center; padding: 0 10px;"><div style="font-family: 'JetBrains Mono', monospace; font-size: 8px; color: rgba(255,255,255,0.6); letter-spacing: 1px;">CONTACT 114</div></div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 12px; flex-grow: 1;">
+        <div style="display: flex; gap: 16px; font-size: 17px; line-height: 1.5;"><div style="width: 150px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; color: #E31E24;">MARGIN</div><div style="color: rgba(255,255,255,0.65);">54px ทุกด้าน</div></div>
+        <div style="display: flex; gap: 16px; font-size: 17px; line-height: 1.5;"><div style="width: 150px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; color: #E31E24;">RIBBON</div><div style="color: rgba(255,255,255,0.65);">ป้ายหมวดชนขอบซ้าย ตัดมุมขวา 26px ไล่เฉดแดง</div></div>
+        <div style="display: flex; gap: 16px; font-size: 17px; line-height: 1.5;"><div style="width: 150px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; color: #E31E24;">HIGHLIGHT</div><div style="color: rgba(255,255,255,0.65);">พาดหัวไฮไลต์แดงได้<strong style="color: #ffffff; font-weight: 600;">วรรคเดียว</strong>เท่านั้น</div></div>
+        <div style="display: flex; gap: 16px; font-size: 17px; line-height: 1.5;"><div style="width: 150px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; color: #E31E24;">ICON</div><div style="color: rgba(255,255,255,0.65);">วงกลมแดง 46px ไอคอนเส้นขาว สูงสุด 3 ข้อ</div></div>
+        <div style="display: flex; gap: 16px; font-size: 17px; line-height: 1.5;"><div style="width: 150px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; color: #E31E24;">CONTACT</div><div style="color: rgba(255,255,255,0.65);">เบอร์ · LINE · เว็บ ขอบบนแดง 3px</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px;">
+    <div style="border-left: 4px solid #22c55e; padding-left: 20px; display: flex; flex-direction: column; gap: 10px;">
+      <div style="font-size: 17px; font-weight: 700;">ทำ</div>
+      <div style="font-size: 16px; line-height: 1.65; color: rgba(255,255,255,0.6);">พาดหัวไม่เกิน 2 บรรทัด · ไฮไลต์แดงวรรคเดียว · ตัวเลขเด่นใช้ Anton · ภาพไซต์งานจริงหรือภาพสินค้าตัดพื้นหลัง</div>
+    </div>
+    <div style="border-left: 4px solid #E31E24; padding-left: 20px; display: flex; flex-direction: column; gap: 10px;">
+      <div style="font-size: 17px; font-weight: 700;">ห้าม</div>
+      <div style="font-size: 16px; line-height: 1.65; color: rgba(255,255,255,0.6);">พื้นหลังสว่าง · สีอื่นนอกจากแดง-ดำ-ขาว · ไฮไลต์แดงหลายวรรค · ภาพสต็อกคนยิ้มชูนิ้ว · ใส่โลโก้พาร์ตเนอร์โดยไม่ได้รับอนุญาต</div>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

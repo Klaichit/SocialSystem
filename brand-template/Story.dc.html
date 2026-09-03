@@ -1,0 +1,59 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+  <style>
+    body { margin: 0; background: #1a1a1f; font-family: 'IBM Plex Sans Thai', 'IBM Plex Sans', sans-serif; }
+    a { color: #8b4dd6; } a:hover { color: #6A2DAF; }
+  </style>
+</helmet>
+<div style="width: 1080px; height: 1920px; background: #1a1a1f; color: #ffffff; display: flex; flex-direction: column; overflow: hidden;">
+
+  <div style="height: 220px; flex-shrink: 0; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 56px 34px 56px;">
+    <img src="24sEnergy_png.png" alt="24sEnergy" style="height: 34px; width: auto; filter: brightness(0) invert(1);">
+    <div style="font-family: 'JetBrains Mono', monospace; font-weight: 500; font-size: 21px; letter-spacing: 1.6px; color: rgba(255,255,255,0.46);">03 · 09 · 2569</div>
+  </div>
+
+  <div style="height: 900px; flex-shrink: 0; position: relative; overflow: hidden; background-color: #24242c; background-image: linear-gradient(160deg, rgba(106,45,175,0.55), rgba(26,26,31,0.92)), repeating-linear-gradient(135deg, rgba(255,255,255,0.05) 0px, rgba(255,255,255,0.05) 2px, transparent 2px, transparent 26px);">
+    <div style="position: absolute; inset: 0; display: flex; flex-direction: column; gap: 12px; align-items: center; justify-content: center;">
+      <div style="font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 24px; letter-spacing: 3px; color: rgba(255,255,255,0.42);">[ IMAGE 1080 × 900 ]</div>
+      <div style="font-size: 21px; font-weight: 500; color: rgba(255,255,255,0.34);">ภาพแนวตั้ง · ครอปให้หัวเรื่องอยู่กลางเฟรม</div>
+    </div>
+    <div style="position: absolute; left: 56px; top: 40px; display: flex; gap: 10px; align-items: center;">
+      <div style="background: {{accent}}; color: {{chipInk}}; font-size: 23px; font-weight: 700; letter-spacing: 0.3px; padding: 12px 24px; border-radius: 999px;">นโยบายรัฐ</div>
+      <div style="background: rgba(0,0,0,0.55); color: #ffffff; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 19px; letter-spacing: 1.4px; padding: 13px 20px; border-radius: 999px;">MOCKUP</div>
+    </div>
+  </div>
+
+  <div style="flex-grow: 1; display: flex; flex-direction: column; padding: 56px 56px 0 56px;">
+    <div style="width: 84px; height: 7px; border-radius: 4px; background: {{accent}}; flex-shrink: 0;"></div>
+    <h1 style="margin: 30px 0 0 0; font-size: 78px; font-weight: 700; line-height: 1.3; letter-spacing: -1.2px; color: #ffffff; text-wrap: pretty;">รัฐลุยโซลาร์รูฟท็อป 1 ล้านครัวเรือน</h1>
+    <p style="margin: 24px 0 0 0; font-size: 31px; font-weight: 400; line-height: 1.6; color: rgba(255,255,255,0.6); text-wrap: pretty;">ทุ่ม 200,000 ล้านบาท ดันเป้า 5 GW ภายใน 1 ปี</p>
+  </div>
+
+  <div style="height: 260px; flex-shrink: 0; display: flex; align-items: flex-start; justify-content: space-between; padding: 0 56px; gap: 24px;">
+    <div style="display: flex; align-items: center; gap: 16px; background: #6A2DAF; border-radius: 999px; padding: 22px 40px;">
+      <span style="font-size: 28px; font-weight: 700; color: #ffffff;">อ่านฉบับเต็ม</span>
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="13 6 19 12 13 18"></polyline></svg>
+    </div>
+    <div style="font-family: 'JetBrains Mono', monospace; font-weight: 500; font-size: 20px; letter-spacing: 1.4px; color: rgba(255,255,255,0.36); padding-top: 26px;">24senergy.com</div>
+  </div>
+
+</div>
+</x-dc>
+<script data-dc-script data-props='{"accent":{"editor":"color","default":"#8b4dd6","options":["#6A2DAF","#8b4dd6","#fbbf24","#10b981"],"section":"Brand"},"$preview":{"width":1080,"height":1920}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#8b4dd6';
+    return { accent: accent, chipInk: accent === '#fbbf24' ? '#1a1a1f' : '#ffffff' };
+  }
+}
+</script>
+</body>
+</html>

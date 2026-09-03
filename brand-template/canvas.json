@@ -1,0 +1,14 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html",    "x": 0,    "y": 0,    "w": 1080, "h": 1350 },
+    { "file": "Solar.dc.html",   "x": 1180, "y": 0,    "w": 1080, "h": 1350 },
+    { "file": "BigStat.dc.html", "x": 2360, "y": 0,    "w": 1080, "h": 1350 },
+    { "file": "Product.dc.html", "x": 3540, "y": 0,    "w": 1080, "h": 1350 },
+    { "file": "Story.dc.html",   "x": 0,    "y": 1500, "w": 1080, "h": 1920 },
+    { "file": "Spec.dc.html",    "x": 1180, "y": 1500, "w": 1240, "h": 1600 }
+  ],
+  "annotations": [
+    { "id": "how-to-use", "x": 0, "y": -230, "w": 1400, "text": "เทมเพลตการ์ดข่าว 24senergy — แถวบนคือฟอร์แมต 4:5 สี่แบบตามชนิดข่าว แถวล่างคือสตอรี่ 9:16 และชีตสเปกสำหรับเอาไปสร้าง Brand Template ใน Canva\nช่องภาพทุกใบยังเป็น placeholder — ยังไม่ได้ใส่ภาพจริง" }
+  ],
+  "launch": { "view": "canvas" }
+}

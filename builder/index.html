@@ -145,7 +145,7 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg-soft);color
 .photo::before{content:'';position:absolute;inset:0;
   background:linear-gradient(180deg,rgba(26,26,31,.35) 0%,rgba(77,31,128,.92) 78%)}
 .slide.has-photo{color:#fff}
-.slide.has-photo>*{position:relative;z-index:2}
+.slide.has-photo>*:not(.photo){position:relative;z-index:2}
 .slide.has-photo .body{color:rgba(255,255,255,.88)}
 .slide.has-photo .eyebrow{color:#fff}
 .slide.has-photo .rule{background:#fff}
@@ -832,16 +832,38 @@ function makeSlot(id){
 
 function enableDrop(slide){
   if (!slide) return;
+  const fill = (target, f) => {
+    if (!f || !f.type.startsWith('image/')) return;
+    const r = new FileReader();
+    r.onload = () => { target.style.backgroundImage = `url('${r.result}')`; target.classList.add('filled'); };
+    r.readAsDataURL(f);
+  };
   slide.querySelectorAll('.photo, .mockup').forEach(target => {
     target.addEventListener('dragover', e => { e.preventDefault(); e.stopPropagation(); });
     target.addEventListener('drop', e => {
       e.preventDefault(); e.stopPropagation();
-      const f = e.dataTransfer.files[0];
-      if (!f || !f.type.startsWith('image/')) return;
-      const r = new FileReader();
-      r.onload = () => { target.style.backgroundImage = `url('${r.result}')`; target.classList.add('filled'); };
-      r.readAsDataURL(f);
+      fill(target, e.dataTransfer.files[0]);
     });
+  });
+  /* Background photo, on any slide. Where a template ships a .photo it lies
+     under the content blocks, which carry z-index 2 and swallow the drop
+     wherever they cover it — on m4 a bare spacer takes most of the slide — so
+     the slide itself catches what the photo cannot. Templates without a photo
+     layer grow one on first drop and switch into the has-photo treatment.
+     The handlers above stop propagation, so a drop on a mockup still fills
+     that mockup rather than the background. */
+  slide.addEventListener('dragover', e => e.preventDefault());
+  slide.addEventListener('drop', e => {
+    e.preventDefault();
+    let photo = slide.querySelector('.photo');
+    if (!photo){
+      photo = document.createElement('div');
+      photo.className = 'photo';
+      slide.classList.add('has-photo');
+      slide.prepend(photo);
+    }
+    fill(photo, e.dataTransfer.files[0]);
+    checkSoon();
   });
 }
 
@@ -867,7 +889,10 @@ function checkFit(slot){
       if (r.bottom > box.bottom + 0.5 || r.top < box.top - 0.5 || r.right > box.right + 0.5){ bad = true; break; }
     }
     if (!bad){
-      const st8 = el => getComputedStyle(el).position === 'static';
+      /* out-of-flow blocks cannot collide in normal flow; has-photo slides make
+         their content position:relative, so testing for 'static' silently
+         turned this pass off on every slide carrying a background photo. */
+      const st8 = el => getComputedStyle(el).position !== 'absolute';
       const bl = els.filter(el => !el.closest('.cols, .sideby, .grid4, .lr, .specs, .meta, .foot, .halfsplit') && st8(el));
       for (let i = 0; i < bl.length - 1; i++){
         const a = bl[i].getBoundingClientRect(), b = bl[i+1].getBoundingClientRect();

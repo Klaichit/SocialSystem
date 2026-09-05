@@ -54,9 +54,9 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg-soft);color
 .btn:focus-visible,.rail select:focus-visible{outline:2px solid var(--brand-light);outline-offset:2px}
 .hint{font-size:11px;color:#7a7a85;line-height:1.5}
 
-.work{padding:28px;display:flex;flex-direction:column;align-items:center;gap:28px}
+.work{padding:28px;display:grid;grid-template-columns:repeat(3,360px);justify-content:center;align-items:start;align-content:start;gap:28px;min-width:0}
 .slot{position:relative}
-.slot-bar{display:flex;align-items:center;gap:7px;margin-bottom:8px;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.slot-bar{display:flex;flex-wrap:wrap;max-width:360px;align-items:center;gap:7px;margin-bottom:8px;font-family:var(--mono);font-size:11px;color:var(--muted)}
 .slot-bar .tag{color:var(--brand);font-weight:700}
 .slot-bar button{background:#fff;border:1px solid var(--line);border-radius:6px;padding:3px 8px;
   font-family:var(--mono);font-size:10px;cursor:pointer;color:var(--ink-2)}
@@ -231,7 +231,10 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg-soft);color
 .slide.dark .dot-n,.slide.ink .dot-n{background:#fff;color:var(--brand)}
 .dot-t{font-size:calc(38px * var(--tscale));font-weight:500;line-height:1.42}
 
-@media (max-width:900px){.app{grid-template-columns:1fr}.rail{position:static;height:auto}}
+@media (max-width:1499px){.work{grid-template-columns:repeat(2,360px)}}
+@media (max-width:1129px){.work{grid-template-columns:360px}}
+@media (max-width:900px){.app{grid-template-columns:1fr}.rail{position:static;height:auto}.work{grid-template-columns:repeat(2,360px)}}
+@media (max-width:799px){.work{grid-template-columns:360px;padding:20px 8px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 
 .jstat{font-size:11px;color:#7fd1a0;margin-top:6px;line-height:1.5}
@@ -274,6 +277,13 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg-soft);color
   <aside class="rail">
     <h1>Carousel Builder</h1>
     <div class="sub">24sEnergy · 1080×1350 · data-driven</div>
+
+    <section>
+      <button type="button" class="btn" id="allBackgroundBtn">เพิ่มรูปพื้นหลังทุก Template</button>
+      <input type="file" id="allBackgroundIn" accept="image/*" hidden>
+      <div class="hint">เลือกรูปครั้งเดียว ใช้กับทุกสไลด์และเทมเพลต รวมถึงสไลด์ที่เพิ่มใหม่</div>
+      <div class="hint" id="allBackgroundStatus" role="status"></div>
+    </section>
 
     <section>
       <label>โลโก้ (24sEnergy_png.png)</label>
@@ -772,8 +782,12 @@ function blocks(list){
   }).join('');
 }
 
+let allBackgroundSrc = '';
 function renderTemplate(t){
-  return `<div class="slide ${(t.classes||[]).join(' ')}">${blocks(t.blocks)}</div>`;
+  const holder = document.createElement('div');
+  holder.innerHTML = `<div class="slide ${(t.classes||[]).join(' ')}">${blocks(t.blocks)}</div>`;
+  if (allBackgroundSrc) applyBackground(holder.firstElementChild, allBackgroundSrc);
+  return holder.innerHTML;
 }
 
 /* ===== index ===== */
@@ -823,12 +837,83 @@ function makeSlot(id){
       <button data-act="up">↑</button><button data-act="down">↓</button>
       <button data-act="dup">คัดลอก</button><button data-act="del">ลบ</button>
       <button data-act="png">PNG</button>
+      <button data-act="background">เพิ่มรูปพื้นหลัง</button>
+      <input type="file" class="background-input" accept="image/*" aria-label="เลือกรูปพื้นหลัง" hidden>
     </div>
     <div class="stage"><div class="scaler">${renderTemplate(t)}</div></div>`;
   if (logoSrc) slot.querySelectorAll('.logo').forEach(l => l.innerHTML = `<img src="${logoSrc}">`);
   enableDrop(slot.querySelector('.slide'));
   return slot;
 }
+
+async function setSlideBackground(slide, file){
+  if (!file) return;
+  try {
+    if (!file.type.startsWith('image/')) throw new Error('image');
+    const src = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+    const image = new Image();
+    image.src = src;
+    await image.decode();
+    applyBackground(slide, src);
+    checkSoon();
+  } catch {
+    say('เปิดรูปไม่ได้ กรุณาเลือกไฟล์รูปภาพใหม่', true);
+  }
+}
+
+function applyBackground(slide, src){
+    let photo = slide.querySelector('.photo');
+    if (!photo){
+      photo = document.createElement('div');
+      photo.className = 'photo';
+      slide.prepend(photo);
+    }
+    photo.style.backgroundImage = `url('${src}')`;
+    photo.classList.add('filled');
+    slide.classList.add('has-photo');
+}
+
+document.getElementById('allBackgroundBtn').onclick = () => document.getElementById('allBackgroundIn').click();
+let allBackgroundRevision = 0;
+document.getElementById('allBackgroundIn').onchange = async e => {
+  const file = e.target.files[0];
+  e.target.value = '';
+  if (!file) return;
+  const revision = ++allBackgroundRevision;
+  const status = document.getElementById('allBackgroundStatus');
+  status.textContent = 'กำลังโหลดรูปภาพ…';
+  try {
+    if (!file.type.startsWith('image/')) throw new Error('image');
+    const src = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+    const image = new Image();
+    image.src = src;
+    await image.decode();
+    if (revision !== allBackgroundRevision) return;
+    allBackgroundSrc = src;
+    document.querySelectorAll('.slide').forEach(slide => applyBackground(slide, src));
+    status.textContent = 'เพิ่มรูปพื้นหลังทุก Template แล้ว';
+    checkSoon();
+  } catch {
+    if (revision === allBackgroundRevision) status.textContent = 'เปิดรูปไม่ได้ กรุณาเลือกไฟล์รูปภาพใหม่';
+  }
+};
+
+work.addEventListener('change', e => {
+  if (!e.target.matches('.background-input')) return;
+  const file = e.target.files[0];
+  e.target.value = '';
+  setSlideBackground(e.target.closest('.slot').querySelector('.slide'), file);
+});
 
 function enableDrop(slide){
   if (!slide) return;
@@ -855,15 +940,7 @@ function enableDrop(slide){
   slide.addEventListener('dragover', e => e.preventDefault());
   slide.addEventListener('drop', e => {
     e.preventDefault();
-    let photo = slide.querySelector('.photo');
-    if (!photo){
-      photo = document.createElement('div');
-      photo.className = 'photo';
-      slide.classList.add('has-photo');
-      slide.prepend(photo);
-    }
-    fill(photo, e.dataTransfer.files[0]);
-    checkSoon();
+    setSlideBackground(slide, e.dataTransfer.files[0]);
   });
 }
 
@@ -1151,6 +1228,7 @@ document.getElementById('jsonOut').onclick = () => {
 work.onclick = e => {
   const b = e.target.closest('.slot-bar button'); if (!b) return;
   const slot = b.closest('.slot'), act = b.dataset.act;
+  if (act === 'background') slot.querySelector('.background-input').click();
   if (act === 'del') slot.remove();
   if (act === 'up' && slot.previousElementSibling) work.insertBefore(slot, slot.previousElementSibling);
   if (act === 'down' && slot.nextElementSibling) work.insertBefore(slot.nextElementSibling, slot);

@@ -1,0 +1,7 @@
+.DS_Store
+Thumbs.db
+*.png
+!docs/**/*.png
+.obsidian/workspace*.json
+.obsidian/cache
+node_modules/

@@ -1,2 +1,7 @@
-# Seeded design canvas (build artifact, ~2.5 MB) — regenerate from the .dc.html sources
-brand-template/24senergy-news-card-system.html
+.DS_Store
+Thumbs.db
+*.png
+!docs/**/*.png
+.obsidian/workspace*.json
+.obsidian/cache
+node_modules/

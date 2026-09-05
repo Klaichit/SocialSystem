@@ -1,0 +1,1170 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>24sEnergy · Carousel Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&family=Sarabun:wght@400;500;600;700&family=Prompt:wght@400;500;600;700&family=Kanit:wght@400;500;600;700&family=Bai+Jamjuree:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&family=Anton&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+:root{
+  --brand:#6A2DAF; --brand-dark:#4d1f80; --brand-light:#8b4dd6;
+  --brand-soft:#f1e9fb; --brand-2:#3F3F3F;
+  --ink:#1a1a1a; --ink-2:#4a4a4a; --muted:#8a8a8a;
+  --line:#e8e8ec; --bg:#fff; --bg-soft:#fafafb; --bg-dark:#1a1a1f;
+  --accent:#22c55e; --danger:#ef4444;
+  --mono:'JetBrains Mono',monospace;
+  --radius:14px; --radius-sm:10px;
+  --sw:1080px; --sh:1350px; --stage-h:450px; --gal-h:250px;
+  --font-head:'IBM Plex Sans Thai',sans-serif;
+  --font-body:'IBM Plex Sans Thai',sans-serif;
+  --font-display:'Anton',sans-serif;
+  --tscale:1;
+  --sym-yes:'✓'; --sym-no:'✕'; --sym-quote:'\201C'; --sym-q:'?';
+  --chk-counter:decimal-leading-zero; --dot-counter:decimal;
+}
+@counter-style c-circled{system:fixed;symbols:'\2460' '\2461' '\2462' '\2463' '\2464' '\2465' '\2466' '\2467';suffix:''}
+@counter-style c-arrow{system:cyclic;symbols:'\25B8';suffix:''}
+@counter-style c-diamond{system:cyclic;symbols:'\25C6';suffix:''}
+@counter-style c-square{system:cyclic;symbols:'\25A0';suffix:''}
+@counter-style c-dash{system:cyclic;symbols:'\2014';suffix:''}
+@counter-style c-dot{system:cyclic;symbols:'\25CF';suffix:''}
+@counter-style c-paren{system:extends decimal;suffix:'.'}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg-soft);color:var(--ink);line-height:1.6}
+
+/* ---------- app chrome ---------- */
+.app{display:grid;grid-template-columns:290px 1fr;min-height:100vh}
+.rail{background:var(--bg-dark);color:#fff;padding:22px 18px;position:sticky;top:0;height:100vh;overflow-y:auto}
+.rail h1{font-size:15px;font-weight:700;margin-bottom:2px}
+.rail .sub{font-family:var(--mono);font-size:10px;color:#8b8b95;margin-bottom:22px}
+.rail section{margin-bottom:20px;border-top:1px solid #2b2b33;padding-top:16px}
+.rail section:first-of-type{border-top:0;padding-top:0}
+.rail label{display:block;font-size:11px;color:#9a9aa5;margin-bottom:6px}
+.rail select,.rail input[type=text]{width:100%;background:#26262d;border:1px solid #33333c;color:#fff;
+  padding:9px 10px;border-radius:var(--radius-sm);font-family:inherit;font-size:12.5px;margin-bottom:8px}
+.rail input[type=file]{width:100%;font-size:11px;color:#9a9aa5}
+.btn{display:block;width:100%;background:var(--brand);color:#fff;border:0;padding:11px;
+  border-radius:var(--radius-sm);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;margin-bottom:8px}
+.btn:hover{background:var(--brand-light)}
+.btn.ghost{background:transparent;border:1px solid #3a3a44;color:#c8c8d0}
+.btn.ghost:hover{background:#26262d}
+.btn:focus-visible,.rail select:focus-visible{outline:2px solid var(--brand-light);outline-offset:2px}
+.hint{font-size:11px;color:#7a7a85;line-height:1.5}
+
+.work{padding:28px;display:flex;flex-direction:column;align-items:center;gap:28px}
+.slot{position:relative}
+.slot-bar{display:flex;align-items:center;gap:7px;margin-bottom:8px;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.slot-bar .tag{color:var(--brand);font-weight:700}
+.slot-bar button{background:#fff;border:1px solid var(--line);border-radius:6px;padding:3px 8px;
+  font-family:var(--mono);font-size:10px;cursor:pointer;color:var(--ink-2)}
+.slot-bar button:hover{border-color:var(--brand);color:var(--brand)}
+.stage{width:360px;height:var(--stage-h);overflow:hidden;border-radius:var(--radius);
+  box-shadow:0 4px 16px rgba(0,0,0,.06),0 12px 40px rgba(0,0,0,.08)}
+.scaler{transform:scale(.3333);transform-origin:top left}
+
+/* ---------- slide base: real 1080x1350 ---------- */
+.slide{font-family:var(--font-body);width:var(--sw);height:var(--sh);background:#fff;position:relative;overflow:hidden;
+  display:flex;flex-direction:column;padding:96px 84px;color:var(--ink)}
+.slide *{outline:none}
+.slide [contenteditable]:focus{background:rgba(106,45,175,.09);border-radius:4px}
+.slide.flush{padding:0}
+
+.slide.dark{background:var(--brand);color:#fff}
+.slide.ink{background:var(--bg-dark);color:#fff}
+.slide.soft{background:var(--brand-soft)}
+.slide.dark .eyebrow,.slide.ink .eyebrow{color:rgba(255,255,255,.75)}
+.slide.dark .rule,.slide.ink .rule{background:rgba(255,255,255,.3)}
+.slide.dark .body,.slide.ink .body{color:rgba(255,255,255,.87)}
+.slide.dark .date,.slide.ink .date{color:rgba(255,255,255,.6)}
+
+.eyebrow{font-family:var(--mono);font-size:calc(26px * var(--tscale));font-weight:700;color:var(--brand);letter-spacing:1px}
+.rule{width:96px;height:6px;background:var(--brand);border-radius:3px;margin:28px 0 34px}
+.head{font-size:calc(88px * var(--tscale));font-weight:700;line-height:1.18;letter-spacing:-.5px}
+.head.xl{font-size:calc(124px * var(--tscale));line-height:1.1;letter-spacing:-2px}
+.head.sm{font-size:calc(66px * var(--tscale))}
+.head.xs{font-size:calc(52px * var(--tscale));line-height:1.3}
+.body{font-size:calc(38px * var(--tscale));font-weight:400;color:var(--ink-2);line-height:1.62;margin-top:32px}
+.body.sm{font-size:calc(32px * var(--tscale))}
+.spacer{flex:1}
+
+.stat{font-family:var(--mono);font-size:calc(190px * var(--tscale));font-weight:700;line-height:1;letter-spacing:-4px}
+.stat-unit{font-family:var(--mono);font-size:calc(56px * var(--tscale));font-weight:500;opacity:.7}
+.stat-cap{font-size:calc(36px * var(--tscale));color:var(--ink-2);margin-top:18px}
+.slide.dark .stat-cap,.slide.ink .stat-cap{color:rgba(255,255,255,.8)}
+
+.pill{display:inline-block;background:var(--brand-soft);color:var(--brand-dark);
+  font-size:calc(30px * var(--tscale));font-weight:600;padding:12px 28px;border-radius:999px;align-self:flex-start}
+.slide.dark .pill,.slide.ink .pill{background:rgba(255,255,255,.16);color:#fff}
+.slide.soft .pill{background:var(--brand);color:#fff}
+
+.foot{display:flex;align-items:center;justify-content:space-between;gap:20px}
+.foot img{height:52px;width:auto;object-fit:contain}
+.foot .ph{font-family:var(--mono);font-size:calc(22px * var(--tscale));color:var(--muted);
+  border:2px dashed var(--line);border-radius:8px;padding:12px 20px}
+.slide.dark .foot img,.slide.ink .foot img,.slide.has-photo .foot img{filter:brightness(0) invert(1)}
+.slide.dark .foot .ph,.slide.ink .foot .ph{color:rgba(255,255,255,.55);border-color:rgba(255,255,255,.3)}
+.swipe{font-family:var(--mono);font-size:calc(24px * var(--tscale));color:var(--brand);font-weight:700}
+.slide.dark .swipe,.slide.ink .swipe{color:rgba(255,255,255,.9)}
+
+.meta{display:flex;align-items:baseline;justify-content:space-between;gap:20px}
+.date{font-family:var(--mono);font-size:calc(24px * var(--tscale));color:var(--muted);font-weight:500}
+.source{font-family:var(--mono);font-size:calc(22px * var(--tscale));color:var(--brand);font-weight:700;
+  border-left:5px solid var(--brand);padding-left:18px}
+
+/* ---------- photo / mockup slots ---------- */
+/* ---------- catalog overlay ---------- */
+.gal{position:fixed;inset:0;background:rgba(18,18,23,.94);z-index:50;overflow-y:auto;padding:32px 24px 60px;display:none}
+.gal.on{display:block}
+.gal-top{max-width:1320px;margin:0 auto 26px;display:flex;align-items:center;justify-content:space-between;gap:20px;color:#fff}
+.gal-top h2{font-size:17px;font-weight:700}
+.gal-top .hint{color:#9a9aa5}
+.gal-close{background:transparent;border:1px solid #4a4a55;color:#fff;border-radius:var(--radius-sm);
+  padding:9px 18px;font-family:inherit;font-size:13px;cursor:pointer}
+.gal-close:hover{background:#2b2b33}
+.gal-h{max-width:1320px;margin:30px auto 14px;color:var(--brand-light);font-family:var(--mono);
+  font-size:12px;font-weight:700;letter-spacing:1px}
+.gal-grid{max-width:1320px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fill,200px);
+  gap:24px;justify-content:center}
+.gal-item{cursor:pointer;border:0;background:none;padding:0;font-family:inherit;text-align:left}
+.gal-thumb{width:200px;height:var(--gal-h);overflow:hidden;border-radius:10px;background:#fff;
+  border:2px solid transparent}
+.gal-item:hover .gal-thumb,.gal-item:focus-visible .gal-thumb{border-color:var(--brand-light)}
+.gal-thumb .scaler{transform:scale(.18519)}
+.gal-cap{color:#d4d4dc;font-size:12px;margin-top:8px}
+.gal-cap b{display:block;font-family:var(--mono);font-size:10px;color:#7a7a85;font-weight:500}
+
+.slot-bar .fit{font-family:var(--mono);font-size:10px;padding:3px 8px;border-radius:6px;
+  background:#eef7f0;color:#1a7f3d;border:1px solid #cfe8d8}
+.slot-bar .fit.bad{background:#fdecec;color:#c62828;border-color:#f5c9c9}
+.stage.warn{box-shadow:0 0 0 3px #ef4444,0 12px 40px rgba(239,68,68,.22)}
+
+.photo{position:absolute;inset:0;background-size:cover;background-position:center 30%}
+.photo::before{content:'';position:absolute;inset:0;
+  background:linear-gradient(180deg,rgba(26,26,31,.35) 0%,rgba(77,31,128,.92) 78%)}
+.slide.has-photo{color:#fff}
+.slide.has-photo>*{position:relative;z-index:2}
+.slide.has-photo .body{color:rgba(255,255,255,.88)}
+.slide.has-photo .eyebrow{color:#fff}
+.slide.has-photo .rule{background:#fff}
+.slide.has-photo .stat-cap{color:rgba(255,255,255,.85)}
+
+.mockup{background:var(--brand-soft);border-radius:var(--radius);position:relative;
+  background-size:contain;background-position:center;background-repeat:no-repeat;
+  display:flex;align-items:center;justify-content:center;min-height:0}
+.mockup .drop{font-family:var(--mono);font-size:calc(22px * var(--tscale));color:var(--brand);opacity:.45;pointer-events:none}
+.mockup.filled .drop{display:none}
+.mockup.bare{background:transparent}
+.mockup.grow{flex:1}
+
+/* ---------- headline layout parts ---------- */
+.band{background:var(--brand);color:#fff;padding:44px 84px;margin:0 -84px}
+.qmark{font-family:var(--mono);font-size:calc(280px * var(--tscale));font-weight:700;line-height:.8;color:var(--brand);opacity:.16}
+.idx{font-family:var(--mono);font-size:calc(150px * var(--tscale));font-weight:700;color:var(--brand);line-height:1;letter-spacing:-6px}
+.slide.dark .idx,.slide.ink .idx{color:rgba(255,255,255,.9)}
+.halfsplit{display:flex;flex-direction:column;height:100%}
+.half{flex:1;display:flex;flex-direction:column;justify-content:center;padding:84px}
+.half.a{background:#fff;color:var(--ink)}
+.half.b{background:var(--brand);color:#fff}
+.half-k{font-family:var(--mono);font-size:calc(26px * var(--tscale));font-weight:700;opacity:.65;margin-bottom:20px}
+.quote{font-size:calc(72px * var(--tscale));font-weight:600;line-height:1.35;letter-spacing:-.5px}
+.quote-mark{font-family:var(--mono);font-size:calc(120px * var(--tscale));font-weight:700;color:var(--brand);line-height:.6}
+.slide.dark .quote-mark{color:rgba(255,255,255,.6)}
+.byline{font-family:var(--mono);font-size:calc(26px * var(--tscale));color:var(--muted);margin-top:38px}
+.slide.dark .byline{color:rgba(255,255,255,.7)}
+.tf{display:flex;gap:26px;align-items:flex-start;margin-bottom:34px}
+.tf-mark{font-family:var(--mono);font-size:calc(44px * var(--tscale));font-weight:700;line-height:1.2;flex:0 0 auto}
+.tf-mark.no{color:var(--danger)}
+.tf-mark.yes{color:var(--accent)}
+.tf-txt{font-size:calc(42px * var(--tscale));line-height:1.45;font-weight:500}
+.checkl{display:flex;flex-direction:column;gap:30px;margin-top:44px}
+.chk{display:flex;gap:24px;align-items:baseline;font-size:calc(42px * var(--tscale));font-weight:500;line-height:1.4}
+.chk-n{font-family:var(--mono);font-size:calc(34px * var(--tscale));font-weight:700;color:var(--brand);flex:0 0 auto}
+.slide.dark .chk-n{color:rgba(255,255,255,.85)}
+.bigword{font-family:'Anton',sans-serif;font-size:calc(210px * var(--tscale));line-height:.92;letter-spacing:-2px;text-transform:uppercase}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:0;flex:1;align-items:stretch}
+.col{padding:52px 44px;display:flex;flex-direction:column;justify-content:center}
+.col+.col{border-left:4px solid var(--line)}
+.slide.dark .col+.col{border-left-color:rgba(255,255,255,.28)}
+.col-k{font-family:var(--mono);font-size:calc(28px * var(--tscale));font-weight:700;color:var(--muted);margin-bottom:22px}
+.col-v{font-size:calc(52px * var(--tscale));font-weight:700;line-height:1.28}
+.slide.dark .col-k{color:rgba(255,255,255,.7)}
+
+/* ---------- product layout parts ---------- */
+.specs{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;
+  border-top:3px solid var(--line);padding-top:34px;margin-top:34px}
+.spec-k{font-size:calc(24px * var(--tscale));color:var(--muted);margin-bottom:6px}
+.spec-v{font-family:var(--mono);font-size:calc(42px * var(--tscale));font-weight:700;color:var(--ink);line-height:1.1}
+.slide.dark .specs,.slide.ink .specs{border-top-color:rgba(255,255,255,.25)}
+.slide.dark .spec-k,.slide.ink .spec-k{color:rgba(255,255,255,.65)}
+.slide.dark .spec-v,.slide.ink .spec-v{color:#fff}
+.speclist{display:flex;flex-direction:column;gap:22px}
+.specrow{display:flex;justify-content:space-between;align-items:baseline;gap:20px;
+  border-bottom:2px solid var(--line);padding-bottom:16px}
+.slide.dark .specrow,.slide.ink .specrow{border-bottom-color:rgba(255,255,255,.22)}
+.specrow .k{font-size:calc(30px * var(--tscale));color:var(--muted)}
+.specrow .v{font-family:var(--mono);font-size:calc(38px * var(--tscale));font-weight:700}
+.slide.dark .specrow .k,.slide.ink .specrow .k{color:rgba(255,255,255,.7)}
+.halo{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);
+  width:820px;height:820px;border-radius:50%;background:radial-gradient(circle,rgba(139,77,214,.42) 0%,rgba(139,77,214,0) 68%)}
+.sideby{display:flex;gap:36px;flex:1;min-height:0}
+.sideby>div{flex:1;display:flex;flex-direction:column;gap:20px;min-height:0}
+.grid4{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:26px;flex:1;min-height:0}
+.g4cap{font-family:var(--mono);font-size:calc(22px * var(--tscale));font-weight:700;color:var(--brand);
+  position:absolute;left:18px;bottom:14px;z-index:3}
+.lr{display:flex;gap:52px;flex:1;align-items:center;min-height:0}
+.lr>.mockup{flex:0 0 46%;align-self:stretch}
+.lr>.txt{flex:1;display:flex;flex-direction:column;justify-content:center}
+.tagover{position:absolute;right:84px;top:96px;font-family:var(--mono);font-size:calc(150px * var(--tscale));
+  font-weight:700;color:var(--brand);opacity:.2;line-height:1;letter-spacing:-6px}
+.price{font-family:var(--mono);font-size:calc(76px * var(--tscale));font-weight:700;color:var(--brand)}
+.slide.dark .price,.slide.ink .price{color:#fff}
+.price-k{font-size:calc(28px * var(--tscale));color:var(--muted);margin-bottom:8px}
+.slide.dark .price-k{color:rgba(255,255,255,.7)}
+.dots{display:flex;flex-direction:column;gap:30px;margin-top:36px}
+.dot{display:flex;gap:22px;align-items:flex-start}
+.dot-n{width:52px;height:52px;border-radius:50%;background:var(--brand);color:#fff;
+  font-family:var(--mono);font-size:calc(26px * var(--tscale));font-weight:700;display:flex;align-items:center;
+  justify-content:center;flex:0 0 auto;margin-top:4px}
+.slide.dark .dot-n,.slide.ink .dot-n{background:#fff;color:var(--brand)}
+.dot-t{font-size:calc(38px * var(--tscale));font-weight:500;line-height:1.42}
+
+@media (max-width:900px){.app{grid-template-columns:1fr}.rail{position:static;height:auto}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+.jstat{font-size:11px;color:#7fd1a0;margin-top:6px;line-height:1.5}
+.jstat.bad{color:#f2a0a0}
+.rail .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+
+.slide .head,.slide .quote,.slide .col-v,.slide .tf-txt,.slide .chk,
+.slide .dot-t,.slide .half-k,.slide .band .head{font-family:var(--font-head)}
+.slide .bigword{font-family:var(--font-display)}
+
+/* text toolbar */
+.tbar{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:70;display:none;
+  gap:6px;align-items:center;background:#1a1a1f;border:1px solid #33333c;border-radius:12px;
+  padding:8px 10px;box-shadow:0 10px 34px rgba(0,0,0,.34)}
+.tbar.on{display:flex}
+.tbar b{font-family:var(--mono);font-size:10px;color:#7a7a85;font-weight:500;margin:0 4px 0 8px}
+.tbar b:first-child{margin-left:0}
+.tbar button{background:#26262d;border:1px solid #35353f;color:#e4e4ea;border-radius:8px;
+  padding:6px 11px;font-family:inherit;font-size:12px;cursor:pointer;line-height:1}
+.tbar button:hover{background:#33333d;border-color:#4a4a56}
+.tbar button.sw{width:26px;height:26px;padding:0;border-radius:50%}
+
+/* symbols driven by variables so they switch live */
+.checkl{counter-reset:cnum}
+.chk{counter-increment:cnum}
+.chk-n::before{content:counter(cnum, var(--chk-counter))}
+.dots{counter-reset:dnum}
+.dot{counter-increment:dnum}
+.dot-n::before{content:counter(dnum, var(--dot-counter))}
+.tf-mark.yes::before{content:var(--sym-yes)}
+.tf-mark.no::before{content:var(--sym-no)}
+.quote-mark::before{content:var(--sym-quote)}
+.qmark::before{content:var(--sym-q)}
+.tf-mark.txt{font-size:calc(30px * var(--tscale));letter-spacing:1px}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <aside class="rail">
+    <h1>Carousel Builder</h1>
+    <div class="sub">24sEnergy · 1080×1350 · data-driven</div>
+
+    <section>
+      <label>โลโก้ (24sEnergy_png.png)</label>
+      <input type="file" id="logoIn" accept="image/*">
+    </section>
+
+    <section>
+      <label>ชุดสัญลักษณ์</label>
+      <select id="symSet"></select>
+      <label>ฟอนต์หัวข้อ</label>
+      <select id="fontHead"></select>
+      <label>ฟอนต์เนื้อความ</label>
+      <select id="fontBody"></select>
+      <label>ฟอนต์ตัวเลข / โมโน</label>
+      <select id="fontMono"></select>
+      <label>ขนาดตัวอักษรรวม <span id="scaleVal">100%</span></label>
+      <input type="range" id="tscale" min="80" max="120" step="2" value="100" style="width:100%">
+      <button class="btn ghost" id="fontReset">คืนค่าแบรนด์</button>
+    </section>
+
+    <section>
+      <label>สัดส่วนภาพ</label>
+      <select id="ratioSel">
+        <option value="4:5" selected>4:5 · 1080×1350 — ฟีด FB / IG</option>
+        <option value="1:1">1:1 · 1080×1080 — ฟีดสี่เหลี่ยม</option>
+        <option value="9:16">9:16 · 1080×1920 — Reels / TikTok / Story</option>
+        <option value="3:4">3:4 · 1080×1440 — TikTok ฟีด</option>
+      </select>
+      <div class="hint">เปลี่ยนได้ตลอด สไลด์ทุกใบปรับตาม แล้วตัวเช็คจะบอกทันทีว่าใบไหนล้น</div>
+    </section>
+
+    <section>
+      <button class="btn" id="openGal">ดูเทมเพลตทั้งหมด</button>
+      <div class="hint">คลิกใบไหนก็เพิ่มเข้าชุดเลย</div>
+    </section>
+
+    <div id="picker"></div>
+
+    <section>
+      <label>ชุดเทมเพลต (templates.json)</label>
+      <input type="file" id="jsonIn" accept=".json,application/json">
+      <button class="btn ghost" id="jsonOut" style="margin-top:8px">ดาวน์โหลดชุดปัจจุบัน</button>
+      <div class="jstat" id="jsonStatus">ใช้ชุดที่ฝังมากับไฟล์</div>
+    </section>
+
+    <section>
+      <button class="btn" id="exportAll">Export ทุกสไลด์</button>
+      <div class="hint">PNG 1080×1350 เรียงตามลำดับ · badge เขียว/แดง ข้างชื่อเทมเพลตบอกว่าข้อความล้นหรือทับกันไหม</div>
+    </section>
+  </aside>
+
+  <main class="work" id="work"></main>
+</div>
+
+<div class="gal" id="gal" hidden>
+  <div class="gal-top">
+    <div>
+      <h2>แคตตาล็อกเทมเพลต</h2>
+      <div class="hint">คลิกที่ใบไหนก็ได้เพื่อเพิ่มเข้าชุดที่กำลังทำ</div>
+    </div>
+    <button class="gal-close" id="closeGal">ปิด</button>
+  </div>
+  <div id="galBody"></div>
+</div>
+
+<div class="tbar" id="tbar">
+  <b>ขนาด</b><button data-t="sz-">A−</button><button data-t="sz+">A+</button>
+  <b>น้ำหนัก</b><button data-t="w400">ปกติ</button><button data-t="w600">กลาง</button><button data-t="w700">หนา</button>
+  <b>จัด</b><button data-t="al">ซ้าย</button><button data-t="ac">กลาง</button><button data-t="ar">ขวา</button>
+  <b>สี</b>
+  <button class="sw" data-t="c-brand" style="background:#6A2DAF"></button>
+  <button class="sw" data-t="c-ink" style="background:#1a1a1a"></button>
+  <button class="sw" data-t="c-white" style="background:#fff"></button>
+  <button class="sw" data-t="c-mute" style="background:#8a8a8a"></button>
+  <b></b><button data-t="clear">ล้าง</button>
+</div>
+
+<script type="application/json" id="tplData">{
+  "version": 1,
+  "brand": "24sEnergy",
+  "size": { "w": 1080, "h": 1350 },
+  "groups": [
+    { "id": "head", "name": "เน้นหัวข้อ" },
+    { "id": "prod", "name": "โชว์สินค้า" },
+    { "id": "misc", "name": "อื่น ๆ" }
+  ],
+  "templates": [
+    {
+      "id": "h1", "group": "head", "name": "พาดหัวเต็มเฟรม", "classes": ["dark"],
+      "blocks": [
+        { "type": "eyebrow", "text": "BESS" },
+        { "type": "rule" },
+        { "type": "head", "size": "xl", "text": "ค่าไฟโรงงาน ลดได้จริง 30%" },
+        { "type": "spacer" },
+        { "type": "foot" }
+      ]
+    },
+    {
+      "id": "h2", "group": "head", "name": "คำถามนำ", "classes": [],
+      "blocks": [
+        { "type": "qmark", "style": "font-size:220px" },
+        { "type": "head", "size": "sm", "style": "margin-top:8px", "text": "ทำไมบิลค่าไฟเดือนนี้แพงกว่าเดือนก่อน ทั้งที่ผลิตเท่าเดิม" },
+        { "type": "body", "text": "คำตอบอยู่ที่ตัวเลขบรรทัดเดียวที่คนส่วนใหญ่ข้าม" },
+        { "type": "spacer" },
+        { "type": "foot" }
+      ]
+    },
+    {
+      "id": "h3", "group": "head", "name": "เลขนำหัวข้อ", "classes": [],
+      "blocks": [
+        { "type": "idx", "text": "03" },
+        { "type": "head", "size": "sm", "style": "margin-top:28px", "text": "เรื่องที่โรงงานเข้าใจผิดเรื่องแบตเตอรี่" },
+        { "type": "body", "text": "ข้อที่สามทำให้หลายที่ตัดสินใจช้าไปสองปี" },
+        { "type": "spacer" },
+        { "type": "foot" }
+      ]
+    },
+    {
+      "id": "h4", "group": "head", "name": "ก่อน / หลัง", "classes": ["flush"],
+      "blocks": [
+        { "type": "halfsplit", "halves": [
+          { "variant": "a", "blocks": [
+            { "type": "halfk", "text": "ก่อนติดตั้ง" },
+            { "type": "head", "size": "sm", "text": "ค่าไฟ 1.8 ล้าน / เดือน" }
+          ]},
+          { "variant": "b", "blocks": [
+            { "type": "halfk", "text": "หลังติดตั้ง" },
+            { "type": "head", "size": "sm", "text": "ค่าไฟ 1.2 ล้าน / เดือน" },
+            { "type": "wrap", "style": "margin-top:auto;padding-top:44px", "blocks": [ { "type": "foot" } ] }
+          ]}
+        ]}
+      ]
+    },
+    {
+      "id": "h5", "group": "head", "name": "คำพูดลูกค้า", "classes": ["soft"],
+      "blocks": [
+        { "type": "spacer" },
+        { "type": "quote", "text": "คืนทุนเร็วกว่าที่คิดไว้เกือบปี ตอนนี้กำลังวางแผนเฟสสอง", "byline": "ผู้จัดการโรงงาน · อุตสาหกรรมอาหาร ชลบุรี" },
+        { "type": "spacer" },
+        { "type": "foot" }
+      ]
+    },
+    {
+      "id": "h6", "group": "head", "name": "เข้าใจผิด / ที่จริง", "classes": [],
+      "blocks": [
+        { "type": "pill", "text": "เข้าใจผิดกันบ่อย" },
+        { "type": "gap", "h": 56 },
+        { "type": "tf", "items": [
+          { "mark": "no", "text": "แบตเตอรี่มีไว้ใช้ตอนไฟดับเท่านั้น" },
+          { "mark": "yes", "text": "ใช้ลดค่าไฟทุกวัน ด้วยการเลี่ยงช่วงพีค ไฟดับเป็นผลพลอยได้" }
+        ]},
+        { "type": "spacer" },
+        { "type": "foot" }
+      ]
+    },
+    {
+      "id": "h7", "group": "head", "name": "แถบหัวข้อ", "classes": [],
+      "blocks": [
+        { "type": "spacer" },
+        { "type": "date", "text": "คู่มือฉบับย่อ" },
+        { "type": "band", "style": "margin-top:24px", "text": "อ่านบิลค่าไฟโรงงานให้เป็น ใน 5 นาที" },
+        { "type": "body", "text": "รู้ว่าเงินหายไปตรงไหน ก่อนจะลงทุนอะไรก็ตาม" },
+        { "type": "spacer" },
+        { "type": "foot" }
+      ]
+    },
+    {
+      "id": "h8", "group": "head", "name": "หัวข้อ + เช็คลิสต์", "classes": [],
+      "blocks": [
+        { "type": "eyebrow", "text": "เช็คก่อนตัดสินใจ" },
+        { "type": "rule" },
+        { "type": "head", "size": "sm", "text": "โรงงานแบบไหนคุ้มกับ BESS" },
+        { "type": "checklist", "items": [
+          "ค่าไฟเกิน 5 แสนต่อเดือน",
+          "เดินเครื่องเป็นกะ มียอดพีคชัดเจน",
+          "มีพื้นที่ว่างอย่างน้อย 40 ตร.ม."
+        ]},
+        { "type": "spacer" },
+        { "type": "foot" }
+      ]
+    },
+    {
+      "id": "h9", "group": "head", "name": "คำเดียวใหญ่", "classes": ["ink"],
+      "blocks": [
+        { "type": "eyebrow", "text": "ศัพท์ที่ต้องรู้" },
+        { "type": "spacer" },
+        { "type": "bigword", "lines": ["PEAK", "SHAVING"] },
+        { "type": "body", "style": "margin-top:44px", "text": "การกดยอดใช้ไฟช่วงสูงสุดลง เพื่อไม่ให้โดนคิดค่า Demand Charge แพง" },
+        { "type": "spacer" },
+        { "type": "foot" }
+      ]
+    },
+    {
+      "id": "h10", "group": "head", "name": "เทียบ A กับ B", "classes": [],
+      "blocks": [
+        { "type": "head", "size": "sm", "text": "โซลาร์อย่างเดียว กับ โซลาร์ + แบตเตอรี่" },
+        { "type": "cols", "style": "margin-top:44px", "items": [
+          { "k": "โซลาร์อย่างเดียว", "v": "ประหยัดเฉพาะกลางวัน ไฟเหลือขายคืนราคาต่ำ" },
+          { "k": "โซลาร์ + BESS", "v": "เก็บไฟส่วนเกินไว้ใช้ตอนพีค คุมค่าไฟได้ทั้งวัน" }
+        ]},
+        { "type": "foot", "mt": 44 }
+      ]
+    },
+
+    {
+      "id": "p1", "group": "prod", "name": "สินค้าเต็มเฟรม", "classes": ["dark"],
+      "blocks": [
+        { "type": "pill", "text": "BESS" },
+        { "type": "mockup", "mod": ["bare", "grow"] },
+        { "type": "head", "size": "sm", "text": "HiTHIUM ∞Power 5 MWh" },
+        { "type": "foot", "mt": 36 }
+      ]
+    },
+    {
+      "id": "p2", "group": "prod", "name": "สินค้า + สเปก 3 ช่อง", "classes": [],
+      "blocks": [
+        { "type": "meta", "pill": "BESS", "date": "Hithium" },
+        { "type": "mockup", "mod": ["grow"] },
+        { "type": "head", "size": "sm", "style": "margin-top:36px", "text": "∞Power 5 MWh" },
+        { "type": "specs", "items": [
+          { "k": "ความจุ", "v": "5 MWh" },
+          { "k": "รอบชาร์จ", "v": "15,000" },
+          { "k": "รับประกัน", "v": "10 ปี" }
+        ]},
+        { "type": "foot", "mt": 36 }
+      ]
+    },
+    {
+      "id": "p3", "group": "prod", "name": "สินค้า + รัศมีเรืองแสง", "classes": ["ink"],
+      "blocks": [
+        { "type": "halo" },
+        { "type": "wrap", "style": "position:relative;z-index:2;display:flex;flex-direction:column;height:100%", "blocks": [
+          { "type": "eyebrow", "text": "รุ่นใหม่" },
+          { "type": "mockup", "mod": ["bare", "grow"] },
+          { "type": "head", "size": "sm", "text": "EV Charger 180 kW" },
+          { "type": "body", "size": "sm", "text": "ชาร์จรถบรรทุกไฟฟ้าเต็มใน 45 นาที" },
+          { "type": "foot", "mt": 32 }
+        ]}
+      ]
+    },
+    {
+      "id": "p4", "group": "prod", "name": "ชี้จุดเด่น 3 จุด", "classes": [],
+      "blocks": [
+        { "type": "meta", "pill": "Solar PV", "date": "N-Type TOPCon" },
+        { "type": "mockup", "mod": ["grow"] },
+        { "type": "dots", "items": [
+          "ประสิทธิภาพแปลงพลังงาน 23.2%",
+          "ทนลมได้ 2,400 Pa ผ่านมาตรฐานชายฝั่ง",
+          "รับประกันกำลังผลิต 30 ปี"
+        ]},
+        { "type": "foot", "mt": 32 }
+      ]
+    },
+    {
+      "id": "p5", "group": "prod", "name": "เทียบสองรุ่น", "classes": [],
+      "blocks": [
+        { "type": "head", "size": "xs", "text": "เลือกรุ่นไหนดี" },
+        { "type": "sideby", "style": "margin-top:36px", "columns": [
+          [
+            { "type": "mockup", "mod": ["grow"] },
+            { "type": "head", "size": "xs", "text": "215 kWh" },
+            { "type": "date", "text": "โรงงานขนาดกลาง" }
+          ],
+          [
+            { "type": "mockup", "mod": ["grow"] },
+            { "type": "head", "size": "xs", "text": "5 MWh" },
+            { "type": "date", "text": "นิคม / โรงไฟฟ้า" }
+          ]
+        ]},
+        { "type": "foot", "mt": 36 }
+      ]
+    },
+    {
+      "id": "p6", "group": "prod", "name": "ตัวเลขทับสินค้า", "classes": [],
+      "blocks": [
+        { "type": "tagover", "text": "5MWh" },
+        { "type": "eyebrow", "text": "BESS" },
+        { "type": "mockup", "mod": ["grow"] },
+        { "type": "stat", "value": "15k", "unit": "รอบ", "caption": "อายุใช้งานยาวกว่าลิเธียมทั่วไปเกือบเท่าตัว" },
+        { "type": "foot", "mt": 28 }
+      ]
+    },
+    {
+      "id": "p7", "group": "prod", "name": "ไลน์อัพ 4 ช่อง", "classes": [],
+      "blocks": [
+        { "type": "head", "size": "xs", "text": "ครบทั้งระบบ จากผู้ติดตั้งเดียว" },
+        { "type": "grid4", "style": "margin-top:36px", "items": ["BESS", "Solar", "EV", "Monitoring"] },
+        { "type": "foot", "mt": 36 }
+      ]
+    },
+    {
+      "id": "p8", "group": "prod", "name": "สินค้าซ้าย ข้อความขวา", "classes": ["soft"],
+      "blocks": [
+        { "type": "lr", "mockup": { "mod": ["bare"] }, "blocks": [
+          { "type": "pill", "text": "Monitoring" },
+          { "type": "head", "size": "xs", "style": "margin-top:28px", "text": "ดูค่าไฟแบบเรียลไทม์ จากมือถือ" },
+          { "type": "body", "size": "sm", "text": "รู้ทันทีว่าพีควันนี้จะทะลุหรือไม่ ก่อนที่มิเตอร์จะบันทึก" }
+        ]},
+        { "type": "foot", "mt": 36 }
+      ]
+    },
+    {
+      "id": "p9", "group": "prod", "name": "สินค้าบนภาพหน้างาน", "classes": ["has-photo"],
+      "blocks": [
+        { "type": "photo" },
+        { "type": "eyebrow", "text": "ติดตั้งจริง" },
+        { "type": "mockup", "mod": ["bare", "grow"] },
+        { "type": "head", "size": "sm", "text": "BESS 1 MWh · นิคมอมตะซิตี้" },
+        { "type": "body", "size": "sm", "text": "ส่งมอบและเดินระบบภายใน 90 วัน" },
+        { "type": "foot", "mt": 28 }
+      ]
+    },
+    {
+      "id": "p10", "group": "prod", "name": "สเปกเต็ม + ราคาเริ่มต้น", "classes": [],
+      "blocks": [
+        { "type": "meta", "pill": "BESS", "date": "รุ่นขายดี" },
+        { "type": "mockup", "mod": ["grow"] },
+        { "type": "head", "size": "xs", "style": "margin-top:30px", "text": "∞Power 215 kWh" },
+        { "type": "speclist", "style": "margin-top:28px", "items": [
+          { "k": "ความจุใช้งาน", "v": "215 kWh" },
+          { "k": "กำลังจ่าย", "v": "100 kW" },
+          { "k": "ระยะคืนทุน", "v": "4–5 ปี" }
+        ]},
+        { "type": "price", "style": "margin-top:30px", "label": "ประเมินราคาให้ฟรี", "value": "ทักแชทได้เลย" },
+        { "type": "foot", "right": "24senergy.com", "mt": 26 }
+      ]
+    },
+
+    {
+      "id": "m1", "group": "misc", "name": "ปัญหา", "classes": [],
+      "blocks": [
+        { "type": "pill", "text": "ปัญหา" },
+        { "type": "head", "size": "sm", "style": "margin-top:40px", "text": "ค่า Demand Charge กินงบ 30–40% ของบิลทุกเดือน" },
+        { "type": "body", "text": "ยอดพีคแค่ 15 นาทีเดียว กำหนดค่าไฟทั้งเดือนของคุณ" },
+        { "type": "spacer" },
+        { "type": "foot" }
+      ]
+    },
+    {
+      "id": "m2", "group": "misc", "name": "เนื้อหา", "classes": [],
+      "blocks": [
+        { "type": "eyebrow", "text": "วิธีแก้" },
+        { "type": "rule" },
+        { "type": "head", "size": "sm", "text": "Peak Shaving ด้วยแบตเตอรี่" },
+        { "type": "body", "text": "ชาร์จตอนค่าไฟถูก ปล่อยออกตอนพีค ยอดที่มิเตอร์เห็นจึงไม่เคยขึ้นสูง" },
+        { "type": "spacer" },
+        { "type": "foot" }
+      ]
+    },
+    {
+      "id": "m3", "group": "misc", "name": "ตัวเลข", "classes": ["dark"],
+      "blocks": [
+        { "type": "spacer" },
+        { "type": "stat", "value": "4.2", "unit": "ปี", "caption": "ระยะคืนทุนเฉลี่ยของโรงงาน 500 kW ที่ติดตั้งกับเรา" },
+        { "type": "spacer" },
+        { "type": "foot" }
+      ]
+    },
+    {
+      "id": "m4", "group": "misc", "name": "ภาพหน้างาน", "classes": ["has-photo"],
+      "blocks": [
+        { "type": "photo" },
+        { "type": "spacer" },
+        { "type": "eyebrow", "text": "หน้างานจริง" },
+        { "type": "rule" },
+        { "type": "head", "size": "sm", "text": "ติดตั้ง BESS 1 MWh · นิคมอมตะซิตี้" },
+        { "type": "spacer", "flex": ".25" },
+        { "type": "foot" }
+      ]
+    },
+    {
+      "id": "m5", "group": "misc", "name": "ข่าวสาร", "classes": [],
+      "blocks": [
+        { "type": "meta", "pill": "ข่าวพลังงาน", "date": "05.09.2026" },
+        { "type": "rule" },
+        { "type": "head", "size": "sm", "text": "กกพ. ปรับโครงสร้างค่า Ft งวดใหม่ กระทบภาคอุตสาหกรรมอย่างไร" },
+        { "type": "body", "text": "สรุปสาระสำคัญและผลกระทบต่อต้นทุนพลังงานของโรงงาน ในสามประเด็นหลัก" },
+        { "type": "spacer" },
+        { "type": "source", "text": "ที่มา · สำนักงาน กกพ." },
+        { "type": "foot", "mt": 36 }
+      ]
+    },
+    {
+      "id": "m6", "group": "misc", "name": "ปิดท้าย / CTA", "classes": ["dark"],
+      "blocks": [
+        { "type": "head", "text": "อยากรู้ว่าโรงงานคุณประหยัดได้เท่าไหร่" },
+        { "type": "body", "text": "ส่งบิลค่าไฟเดือนล่าสุดมา เราคำนวณให้ฟรี" },
+        { "type": "spacer" },
+        { "type": "pill", "text": "ทักแชทได้เลย" },
+        { "type": "foot", "right": "24senergy.com", "mt": 44 }
+      ]
+    }
+  ]
+}
+</script>
+<script>
+/* ===== template data (default set; replaceable via templates.json) ===== */
+let DATA = JSON.parse(document.getElementById('tplData').textContent);
+
+const PH = '<span class="ph">LOGO</span>';
+let logoSrc = null;
+
+/* ===== output ratio ===== */
+const RATIOS = { '4:5':[1080,1350], '1:1':[1080,1080], '9:16':[1080,1920], '3:4':[1080,1440] };
+let RATIO = '4:5';
+function applyRatio(key){
+  if (!RATIOS[key]) return;
+  RATIO = key;
+  const [w,h] = RATIOS[key];
+  const cs = document.documentElement.style;
+  cs.setProperty('--sw', w + 'px');
+  cs.setProperty('--sh', h + 'px');
+  cs.setProperty('--stage-h', Math.round(360 * h / w) + 'px');
+  cs.setProperty('--gal-h', Math.round(200 * h / w) + 'px');
+  if (typeof checkSoon === 'function') checkSoon();
+}
+function outSize(){ return RATIOS[RATIO]; }
+
+/* ===== block renderers ===== */
+const st = b => b.style ? ` style="${b.style}"` : '';
+const ed = ' contenteditable';
+
+const R = {
+  eyebrow: b => `<div class="eyebrow"${st(b)}${ed}>${b.text}</div>`,
+  rule:    b => `<div class="rule"${st(b)}></div>`,
+  head:    b => `<div class="head ${b.size||''}"${st(b)}${ed}>${b.text}</div>`,
+  body:    b => `<div class="body ${b.size||''}"${st(b)}${ed}>${b.text}</div>`,
+  pill:    b => `<div class="pill"${st(b)}${ed}>${b.text}</div>`,
+  date:    b => `<div class="date"${st(b)}${ed}>${b.text}</div>`,
+  halfk:   b => `<div class="half-k"${st(b)}${ed}>${b.text}</div>`,
+  source:  b => `<div class="source"${st(b)}${ed}>${b.text}</div>`,
+  idx:     b => `<div class="idx"${st(b)}${ed}>${b.text}</div>`,
+  tagover: b => `<div class="tagover"${st(b)}${ed}>${b.text}</div>`,
+  qmark:   b => `<div class="qmark"${st(b)}></div>`,
+  halo:    b => `<div class="halo"></div>`,
+  photo:   b => `<div class="photo"></div>`,
+  spacer:  b => `<div class="spacer"${b.flex?` style="flex:${b.flex}"`:''}></div>`,
+  gap:     b => `<div style="height:${b.h||40}px"></div>`,
+
+  meta: b => `<div class="meta"${st(b)}><span class="pill"${ed}>${b.pill}</span><span class="date"${ed}>${b.date}</span></div>`,
+
+  mockup: b => `<div class="mockup ${(b.mod||[]).join(' ')}"${st(b)}><span class="drop">${b.label||'ลากรูปมาวาง'}</span></div>`,
+
+  stat: b => `<div${st(b)}><span class="stat"${ed}>${b.value}</span><span class="stat-unit"${ed}>${b.unit||''}</span></div>`
+            + `<div class="stat-cap"${ed}>${b.caption||''}</div>`,
+
+  specs: b => `<div class="specs"${st(b)}>` + b.items.map(i =>
+    `<div><div class="spec-k"${ed}>${i.k}</div><div class="spec-v"${ed}>${i.v}</div></div>`).join('') + `</div>`,
+
+  speclist: b => `<div class="speclist"${st(b)}>` + b.items.map(i =>
+    `<div class="specrow"><span class="k"${ed}>${i.k}</span><span class="v"${ed}>${i.v}</span></div>`).join('') + `</div>`,
+
+  price: b => `<div${st(b)}><div class="price-k"${ed}>${b.label}</div><div class="price"${ed}>${b.value}</div></div>`,
+
+  dots: b => `<div class="dots"${st(b)}>` + b.items.map((t,i) =>
+    `<div class="dot"><span class="dot-n"></span><span class="dot-t"${ed}>${t}</span></div>`).join('') + `</div>`,
+
+  checklist: b => `<div class="checkl"${st(b)}>` + b.items.map((t,i) =>
+    `<div class="chk"><span class="chk-n"></span><span${ed}>${t}</span></div>`).join('') + `</div>`,
+
+  tf: b => b.items.map(i =>
+    `<div class="tf"><span class="tf-mark ${i.mark}"></span><span class="tf-txt"${ed}>${i.text}</span></div>`).join(''),
+
+  cols: b => `<div class="cols"${st(b)}>` + b.items.map(i =>
+    `<div class="col"><div class="col-k"${ed}>${i.k}</div><div class="col-v"${ed}>${i.v}</div></div>`).join('') + `</div>`,
+
+  quote: b => `<div class="quote-mark"></div><div class="quote"${ed}>${b.text}</div>`
+            + `<div class="byline"${ed}>${b.byline||''}</div>`,
+
+  bigword: b => `<div class="bigword"${st(b)}${ed}>${(b.lines||[]).join('<br>')}</div>`,
+
+  band: b => `<div class="band"${st(b)}><div class="head sm"${ed}>${b.text}</div></div>`,
+
+  grid4: b => `<div class="grid4"${st(b)}>` + b.items.map(l =>
+    `<div class="mockup"><span class="drop">${l}</span></div>`).join('') + `</div>`,
+
+  sideby: b => `<div class="sideby"${st(b)}>` + b.columns.map(c =>
+    `<div>${blocks(c)}</div>`).join('') + `</div>`,
+
+  lr: b => `<div class="lr"${st(b)}>${R.mockup(b.mockup||{})}<div class="txt">${blocks(b.blocks)}</div></div>`,
+
+  halfsplit: b => `<div class="halfsplit">` + b.halves.map(h =>
+    `<div class="half ${h.variant||''}">${blocks(h.blocks)}</div>`).join('') + `</div>`,
+
+  wrap: b => `<div class="${b.class||''}"${st(b)}>${blocks(b.blocks)}</div>`,
+
+  foot: b => `<div class="foot"${b.mt?` style="margin-top:${b.mt}px"`:''}>`
+           + `<span class="logo">${PH}</span><span class="swipe"${ed}>${b.right||'ปัดต่อ →'}</span></div>`
+};
+
+function blocks(list){
+  return (list||[]).map(b => {
+    const fn = R[b.type];
+    if (!fn) { console.warn('unknown block type:', b.type); return ''; }
+    return fn(b);
+  }).join('');
+}
+
+function renderTemplate(t){
+  return `<div class="slide ${(t.classes||[]).join(' ')}">${blocks(t.blocks)}</div>`;
+}
+
+/* ===== index ===== */
+let BY_ID = {}, BY_GROUP = {};
+function indexData(){
+  BY_ID = {}; BY_GROUP = {};
+  DATA.groups.forEach(g => BY_GROUP[g.id] = []);
+  DATA.templates.forEach(t => {
+    BY_ID[t.id] = t;
+    (BY_GROUP[t.group] = BY_GROUP[t.group] || []).push(t);
+  });
+}
+indexData();
+
+/* ===== build UI ===== */
+const work = document.getElementById('work');
+const picker = document.getElementById('picker');
+
+function buildPickers(){
+  picker.innerHTML = DATA.groups.map(g => `
+    <section>
+      <label>${g.name}</label>
+      <select data-group="${g.id}">${(BY_GROUP[g.id]||[]).map(t =>
+        `<option value="${t.id}">${t.name}</option>`).join('')}</select>
+      <button class="btn ghost" data-add="${g.id}">+ เพิ่ม${g.name}</button>
+    </section>`).join('');
+}
+buildPickers();
+
+picker.onclick = e => {
+  const b = e.target.closest('[data-add]'); if (!b) return;
+  const sel = picker.querySelector(`select[data-group="${b.dataset.add}"]`);
+  work.appendChild(makeSlot(sel.value));
+  renumber();
+  work.lastElementChild.scrollIntoView({behavior:'smooth', block:'center'});
+};
+
+function makeSlot(id){
+  const t = BY_ID[id];
+  if (!t) return document.createElement('div');
+  const slot = document.createElement('div');
+  slot.className = 'slot';
+  slot.dataset.tpl = id;
+  slot.innerHTML = `
+    <div class="slot-bar">
+      <span class="num"></span><span class="tag">${t.name}</span><span class="fit">พอดี</span>
+      <button data-act="up">↑</button><button data-act="down">↓</button>
+      <button data-act="dup">คัดลอก</button><button data-act="del">ลบ</button>
+      <button data-act="png">PNG</button>
+    </div>
+    <div class="stage"><div class="scaler">${renderTemplate(t)}</div></div>`;
+  if (logoSrc) slot.querySelectorAll('.logo').forEach(l => l.innerHTML = `<img src="${logoSrc}">`);
+  enableDrop(slot.querySelector('.slide'));
+  return slot;
+}
+
+function enableDrop(slide){
+  if (!slide) return;
+  slide.querySelectorAll('.photo, .mockup').forEach(target => {
+    target.addEventListener('dragover', e => { e.preventDefault(); e.stopPropagation(); });
+    target.addEventListener('drop', e => {
+      e.preventDefault(); e.stopPropagation();
+      const f = e.dataTransfer.files[0];
+      if (!f || !f.type.startsWith('image/')) return;
+      const r = new FileReader();
+      r.onload = () => { target.style.backgroundImage = `url('${r.result}')`; target.classList.add('filled'); };
+      r.readAsDataURL(f);
+    });
+  });
+}
+
+function renumber(){
+  [...work.children].forEach((s,i) => s.querySelector('.num').textContent = String(i+1).padStart(2,'0'));
+  checkSoon();
+}
+
+/* ===== overflow / overlap checker ===== */
+const WATCH = '.head,.body,.quote,.bigword,.stat,.stat-cap,.tf,.chk,.col-v,.dot-t,.specs,.speclist,.price,.foot,.source,.pill,.qmark,.idx';
+
+function checkFit(slot){
+  const slide = slot.querySelector('.slide');
+  const stage = slot.querySelector('.stage');
+  const badge = slot.querySelector('.fit');
+  if (!slide || !badge) return;
+  const box = slide.getBoundingClientRect();
+  let bad = slide.scrollHeight > slide.clientHeight + 2;
+  if (!bad){
+    const els = [...slide.querySelectorAll(WATCH)];
+    for (const el of els){
+      const r = el.getBoundingClientRect();
+      if (r.bottom > box.bottom + 0.5 || r.top < box.top - 0.5 || r.right > box.right + 0.5){ bad = true; break; }
+    }
+    if (!bad){
+      const st8 = el => getComputedStyle(el).position === 'static';
+      const bl = els.filter(el => !el.closest('.cols, .sideby, .grid4, .lr, .specs, .meta, .foot, .halfsplit') && st8(el));
+      for (let i = 0; i < bl.length - 1; i++){
+        const a = bl[i].getBoundingClientRect(), b = bl[i+1].getBoundingClientRect();
+        if (b.top < a.bottom - 1.5){ bad = true; break; }
+      }
+    }
+  }
+  badge.textContent = bad ? 'ล้น' : 'พอดี';
+  badge.classList.toggle('bad', bad);
+  stage.classList.toggle('warn', bad);
+}
+function checkAll(){ [...work.children].forEach(checkFit); }
+var fitTimer;
+function checkSoon(){ clearTimeout(fitTimer); fitTimer = setTimeout(checkAll, 180); }
+work.addEventListener('input', checkSoon);
+window.addEventListener('resize', checkSoon);
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(checkAll);
+
+/* ===== catalog ===== */
+const gal = document.getElementById('gal'), galBody = document.getElementById('galBody');
+let galBuilt = false;
+
+function buildGal(){
+  galBody.innerHTML = DATA.groups.map(g => `
+    <div class="gal-h">${g.name}</div>
+    <div class="gal-grid">${(BY_GROUP[g.id]||[]).map(t => `
+      <button class="gal-item" data-key="${t.id}">
+        <div class="gal-thumb"><div class="scaler">${renderTemplate(t)}</div></div>
+        <div class="gal-cap"><b>${t.id}</b>${t.name}</div>
+      </button>`).join('')}</div>`).join('');
+  if (logoSrc) galBody.querySelectorAll('.logo').forEach(l => l.innerHTML = `<img src="${logoSrc}">`);
+  galBuilt = true;
+}
+document.getElementById('openGal').onclick = () => {
+  if (!galBuilt) buildGal();
+  gal.hidden = false; gal.classList.add('on'); document.body.style.overflow = 'hidden';
+};
+function closeGal(){ gal.classList.remove('on'); gal.hidden = true; document.body.style.overflow = ''; }
+document.getElementById('closeGal').onclick = closeGal;
+gal.addEventListener('click', e => { if (e.target === gal) closeGal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && gal.classList.contains('on')) closeGal(); });
+galBody.onclick = e => {
+  const item = e.target.closest('.gal-item'); if (!item) return;
+  work.appendChild(makeSlot(item.dataset.key));
+  renumber(); closeGal();
+  work.lastElementChild.scrollIntoView({behavior:'smooth', block:'center'});
+};
+
+/* ===== logo ===== */
+/* ===== fonts & text scale ===== */
+const FONTS = [
+  ['สายงาน / อ่านง่าย', [
+    ["'IBM Plex Sans Thai',sans-serif", 'IBM Plex Sans Thai (แบรนด์)', 'IBM Plex Sans Thai'],
+    ["'Anuphan',sans-serif", 'Anuphan', 'Anuphan'],
+    ["'Noto Sans Thai',sans-serif", 'Noto Sans Thai', 'Noto Sans Thai'],
+    ["'Sarabun',sans-serif", 'Sarabun', 'Sarabun'],
+    ["'Krub',sans-serif", 'Krub', 'Krub'],
+    ["'Niramit',sans-serif", 'Niramit', 'Niramit'],
+    ["'Thasadith',sans-serif", 'Thasadith', 'Thasadith'],
+    ["'KoHo',sans-serif", 'KoHo', 'KoHo']
+  ]],
+  ['เข้ม / พาดหัว', [
+    ["'Kanit',sans-serif", 'Kanit', 'Kanit'],
+    ["'Prompt',sans-serif", 'Prompt', 'Prompt'],
+    ["'Bai Jamjuree',sans-serif", 'Bai Jamjuree', 'Bai Jamjuree'],
+    ["'Chakra Petch',sans-serif", 'Chakra Petch (แนวเทคนิค)', 'Chakra Petch'],
+    ["'Fahkwang',sans-serif", 'Fahkwang', 'Fahkwang'],
+    ["'Mitr',sans-serif", 'Mitr', 'Mitr'],
+    ["'Athiti',sans-serif", 'Athiti', 'Athiti'],
+    ["'K2D',sans-serif", 'K2D', 'K2D']
+  ]],
+  ['มีหัว / ทางการ', [
+    ["'Trirong',serif", 'Trirong', 'Trirong'],
+    ["'Taviraj',serif", 'Taviraj', 'Taviraj'],
+    ["'Maitree',serif", 'Maitree', 'Maitree'],
+    ["'Pridi',serif", 'Pridi', 'Pridi'],
+    ["'Noto Serif Thai',serif", 'Noto Serif Thai', 'Noto Serif Thai'],
+    ["'Charmonman',cursive", 'Charmonman (ลายมือ)', 'Charmonman'],
+    ["'Itim',cursive", 'Itim (ลายมือ)', 'Itim']
+  ]],
+  ['อื่น ๆ', [
+    ["'JetBrains Mono',monospace", 'JetBrains Mono', 'JetBrains Mono'],
+    ["'Anton',sans-serif", 'Anton (อังกฤษเท่านั้น)', 'Anton']
+  ]]
+];
+const FONT_BY_VAL = {};
+FONTS.forEach(([, list]) => list.forEach(([v, n, g]) => FONT_BY_VAL[v] = g));
+
+const loaded = new Set(['IBM Plex Sans Thai','JetBrains Mono','Anton']);
+function ensureFont(google){
+  if (!google || loaded.has(google)) return;
+  loaded.add(google);
+  const link = document.createElement('link');
+  link.rel = 'stylesheet';
+  link.href = 'https://fonts.googleapis.com/css2?family='
+    + google.replace(/ /g,'+') + ':wght@400;500;600;700&display=swap';
+  document.head.appendChild(link);
+}
+const DEFAULTS = { head: FONTS[0][0], body: FONTS[0][0], mono: "'JetBrains Mono',monospace" };
+
+function fillFonts(id, val){
+  const s = document.getElementById(id);
+  s.innerHTML = FONTS.map(([g, list]) => `<optgroup label="${g}">` + list.map(([v,n]) =>
+    `<option value="${v.replace(/"/g,'&quot;')}">${n}</option>`).join('') + `</optgroup>`).join('');
+  s.value = val;
+}
+fillFonts('fontHead', DEFAULTS.head);
+fillFonts('fontBody', DEFAULTS.body);
+fillFonts('fontMono', DEFAULTS.mono);
+
+const rootStyle = document.documentElement.style;
+const setVar = (k,v) => { rootStyle.setProperty(k, v); checkSoon(); };
+const pickFont = (id, varName) => document.getElementById(id).onchange = e => {
+  ensureFont(FONT_BY_VAL[e.target.value]);
+  setVar(varName, e.target.value);
+  setTimeout(checkAll, 700);
+};
+pickFont('fontHead', '--font-head');
+pickFont('fontBody', '--font-body');
+pickFont('fontMono', '--mono');
+
+/* ===== symbol sets ===== */
+const SYMS = {
+  classic: ['มาตรฐาน · ✓ ✕ · 01 02', { yes:'✓', no:'✕', quote:'\u201C', q:'?',
+    chk:'decimal-leading-zero', dot:'decimal' }],
+  circled: ['วงกลม · ⊕ ⊖ · ①②', { yes:'⊕', no:'⊖', quote:'❝', q:'?',
+    chk:'c-circled', dot:'c-circled' }],
+  geo: ['เรขาคณิต · ◆ ◇ · ▸', { yes:'◆', no:'◇', quote:'「', q:'?',
+    chk:'c-arrow', dot:'c-diamond' }],
+  square: ['เหลี่ยม · ■ □ · —', { yes:'■', no:'□', quote:'«', q:'?',
+    chk:'c-dash', dot:'c-square' }],
+  minimal: ['เรียบ · + − · ●', { yes:'+', no:'−', quote:'\u2018', q:'?',
+    chk:'c-dot', dot:'c-dot' }],
+  numeric: ['ตัวเลขล้วน · 1. 2.', { yes:'✔', no:'✘', quote:'\u201E', q:'?',
+    chk:'c-paren', dot:'c-paren' }]
+};
+const symSel = document.getElementById('symSet');
+symSel.innerHTML = Object.entries(SYMS).map(([k,v]) => `<option value="${k}">${v[0]}</option>`).join('');
+function applySyms(key){
+  const s = SYMS[key]; if (!s) return;
+  const v = s[1];
+  const q = ch => "'" + ch + "'";
+  rootStyle.setProperty('--sym-yes', q(v.yes));
+  rootStyle.setProperty('--sym-no', q(v.no));
+  rootStyle.setProperty('--sym-quote', q(v.quote));
+  rootStyle.setProperty('--sym-q', q(v.q));
+  rootStyle.setProperty('--chk-counter', v.chk);
+  rootStyle.setProperty('--dot-counter', v.dot);
+  checkSoon();
+}
+symSel.onchange = e => applySyms(e.target.value);
+
+const scaleIn = document.getElementById('tscale');
+scaleIn.oninput = e => {
+  document.getElementById('scaleVal').textContent = e.target.value + '%';
+  setVar('--tscale', (e.target.value / 100).toFixed(2));
+};
+document.getElementById('fontReset').onclick = () => {
+  fillFonts('fontHead', DEFAULTS.head); fillFonts('fontBody', DEFAULTS.body); fillFonts('fontMono', DEFAULTS.mono);
+  rootStyle.setProperty('--font-head', DEFAULTS.head);
+  rootStyle.setProperty('--font-body', DEFAULTS.body);
+  rootStyle.setProperty('--mono', DEFAULTS.mono);
+  rootStyle.setProperty('--tscale', '1');
+  scaleIn.value = 100; document.getElementById('scaleVal').textContent = '100%';
+  symSel.value = 'classic'; applySyms('classic');
+  checkSoon();
+};
+
+/* ===== per-block text toolbar ===== */
+const tbar = document.getElementById('tbar');
+let target = null;
+
+document.addEventListener('focusin', e => {
+  const el = e.target.closest('.slide [contenteditable]');
+  if (el){ target = el; tbar.classList.add('on'); }
+});
+document.addEventListener('focusout', e => {
+  setTimeout(() => {
+    if (!document.activeElement || !document.activeElement.closest('.slide [contenteditable]')){
+      if (!tbar.matches(':hover')){ tbar.classList.remove('on'); target = null; }
+    }
+  }, 120);
+});
+tbar.addEventListener('mousedown', e => e.preventDefault());
+tbar.onclick = e => {
+  const b = e.target.closest('[data-t]'); if (!b || !target) return;
+  const t = b.dataset.t;
+  const cur = parseFloat(getComputedStyle(target).fontSize) || 40;
+  const scale = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tscale')) || 1;
+  if (t === 'sz+') target.style.fontSize = Math.round((cur / scale) + 6) + 'px';
+  if (t === 'sz-') target.style.fontSize = Math.max(14, Math.round((cur / scale) - 6)) + 'px';
+  if (t.startsWith('w')) target.style.fontWeight = t.slice(1);
+  if (t === 'al') target.style.textAlign = 'left';
+  if (t === 'ac') target.style.textAlign = 'center';
+  if (t === 'ar') target.style.textAlign = 'right';
+  if (t === 'c-brand') target.style.color = 'var(--brand)';
+  if (t === 'c-ink')   target.style.color = 'var(--ink)';
+  if (t === 'c-white') target.style.color = '#fff';
+  if (t === 'c-mute')  target.style.color = 'var(--muted)';
+  if (t === 'clear'){ ['fontSize','fontWeight','textAlign','color'].forEach(k => target.style[k] = ''); }
+  checkSoon();
+};
+
+document.getElementById('ratioSel').onchange = e => applyRatio(e.target.value);
+
+document.getElementById('logoIn').onchange = e => {
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = () => {
+    logoSrc = r.result;
+    document.querySelectorAll('.logo').forEach(l => l.innerHTML = `<img src="${logoSrc}">`);
+    galBuilt = false;
+  };
+  r.readAsDataURL(f);
+};
+
+/* ===== templates.json in / out ===== */
+const status = document.getElementById('jsonStatus');
+function say(msg, bad){ status.textContent = msg; status.className = 'jstat' + (bad ? ' bad' : ''); }
+
+document.getElementById('jsonIn').onchange = e => {
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try {
+      const next = JSON.parse(r.result);
+      if (!next.templates || !Array.isArray(next.templates)) throw new Error('ไม่พบ templates[]');
+      if (!next.groups || !Array.isArray(next.groups)) throw new Error('ไม่พบ groups[]');
+      const unknown = new Set();
+      next.templates.forEach(t => (function walk(list){
+        (list||[]).forEach(b => {
+          if (!R[b.type]) unknown.add(b.type);
+          if (b.blocks) walk(b.blocks);
+          if (b.columns) b.columns.forEach(walk);
+          if (b.halves) b.halves.forEach(h => walk(h.blocks));
+        });
+      })(t.blocks));
+      DATA = next; indexData(); buildPickers(); galBuilt = false;
+      work.innerHTML = ''; renumber();
+      say(`โหลดแล้ว ${DATA.templates.length} แบบ` + (unknown.size ? ` · ไม่รู้จักบล็อก: ${[...unknown].join(', ')}` : ''), unknown.size > 0);
+    } catch (err) {
+      say('ไฟล์ไม่ถูกต้อง · ' + err.message, true);
+    }
+  };
+  r.readAsText(f);
+};
+
+document.getElementById('jsonOut').onclick = () => {
+  const blob = new Blob([JSON.stringify(DATA, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = 'templates.json'; a.click();
+  URL.revokeObjectURL(a.href);
+};
+
+/* ===== slot actions ===== */
+work.onclick = e => {
+  const b = e.target.closest('.slot-bar button'); if (!b) return;
+  const slot = b.closest('.slot'), act = b.dataset.act;
+  if (act === 'del') slot.remove();
+  if (act === 'up' && slot.previousElementSibling) work.insertBefore(slot, slot.previousElementSibling);
+  if (act === 'down' && slot.nextElementSibling) work.insertBefore(slot.nextElementSibling, slot);
+  if (act === 'dup'){ const c = slot.cloneNode(true); enableDrop(c.querySelector('.slide')); slot.after(c); }
+  if (act === 'png') shoot(slot, [...work.children].indexOf(slot) + 1);
+  renumber();
+};
+
+async function shoot(slot, n){
+  const scaler = slot.querySelector('.scaler'), stage = slot.querySelector('.stage');
+  const [OW, OH] = outSize();
+  const sw = stage.style.width, sh = stage.style.height, ov = stage.style.overflow;
+  scaler.style.transform = 'none';
+  stage.style.width = OW + 'px'; stage.style.height = OH + 'px'; stage.style.overflow = 'visible';
+  try {
+    const canvas = await html2canvas(slot.querySelector('.slide'), {
+      width:OW, height:OH, scale:1, backgroundColor:null, useCORS:true, logging:false });
+    const a = document.createElement('a');
+    a.download = `24senergy-${RATIO.replace(':','x')}-${String(n).padStart(2,'0')}.png`;
+    a.href = canvas.toDataURL('image/png');
+    a.click();
+  } finally {
+    scaler.style.transform = 'scale(.3333)';
+    stage.style.width = sw; stage.style.height = sh; stage.style.overflow = ov;
+  }
+}
+
+document.getElementById('exportAll').onclick = async () => {
+  const slots = [...work.children];
+  for (let i = 0; i < slots.length; i++){
+    await shoot(slots[i], i + 1);
+    await new Promise(r => setTimeout(r, 420));
+  }
+};
+
+/* ===== starter set ===== */
+['h1','m1','m2','p2','m3','m5','m6'].filter(k => BY_ID[k]).forEach(k => work.appendChild(makeSlot(k)));
+renumber();
+
+</script>
+</body>
+</html>

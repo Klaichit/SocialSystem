@@ -143,9 +143,19 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg-soft);color
 
 .photo{position:absolute;inset:0;background-size:cover;background-position:center 30%}
 .photo::before{content:'';position:absolute;inset:0;
-  background:linear-gradient(180deg,rgba(26,26,31,.35) 0%,rgba(77,31,128,.92) 78%)}
+  background:linear-gradient(180deg,rgba(26,26,31,.68) 0%,rgba(77,31,128,.92) 78%)}
 .slide.has-photo{color:#fff}
-.slide.has-photo>*:not(.photo){position:relative;z-index:2}
+.slide.has-photo>*:not(.photo):not(.halo):not(.tagover){position:relative;z-index:2}
+.slide.has-photo>.photo{z-index:0;pointer-events:none}
+.slide.has-photo>.halo,.slide.has-photo>.tagover{z-index:1;pointer-events:none}
+.slide.has-photo .spec-v,.slide.has-photo .price{color:#fff}
+.slide.has-photo .date,.slide.has-photo .price-k,.slide.has-photo .quote-mark,.slide.has-photo .chk-n{color:rgba(255,255,255,.85)}
+.slide.has-photo .foot .ph{color:rgba(255,255,255,.8);border-color:rgba(255,255,255,.5)}
+.slide.has-photo .source,.slide.has-photo .spec-k,.slide.has-photo .specrow .k,.slide.has-photo .col-k,.slide.has-photo .byline{color:rgba(255,255,255,.8)}
+.slide.dark .source,.slide.ink .source{color:rgba(255,255,255,.8)}
+.stat-row{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;flex-shrink:0;margin-top:20px}
+.stat-row .stat{display:block}
+.stat-row .stat-unit{margin-left:0}
 .slide.has-photo .body{color:rgba(255,255,255,.88)}
 .slide.has-photo .eyebrow{color:#fff}
 .slide.has-photo .rule{background:#fff}
@@ -158,6 +168,33 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg-soft);color
 .mockup.filled .drop{display:none}
 .mockup.bare{background:transparent}
 .mockup.grow{flex:1}
+.mockup{cursor:pointer}
+.mockup:focus-visible{outline:4px solid var(--brand-light);outline-offset:6px}
+.slide.product-focus{padding:48px 60px}
+.product-focus .mockup.grow{flex:1;min-height:240px;margin:20px 0}
+.product-focus .head.sm{font-size:calc(56px * var(--tscale));line-height:1.3}
+.product-focus .body.sm{font-size:calc(28px * var(--tscale));margin-top:16px}
+.product-focus .specs{margin-top:22px;padding-top:22px}
+.product-focus .spec-v{font-size:calc(36px * var(--tscale));line-height:1.3}
+.product-focus .speclist{gap:12px}
+.product-focus .specrow{padding-bottom:10px}
+.product-focus .price{font-size:calc(54px * var(--tscale))}
+.product-focus .stat{font-size:calc(130px * var(--tscale))}
+.product-focus .stat-cap{font-size:calc(28px * var(--tscale))}
+.product-focus .lr>.mockup{flex-basis:56%}
+.product-focus .lr{gap:32px}
+.product-focus .lr .head{font-size:calc(44px * var(--tscale))}
+.promotion-layout .offer-content{flex:1;display:flex;flex-direction:column;justify-content:center;gap:16px;min-height:min-content;padding:24px 0}
+.promotion-layout .offer-content .rule{margin:16px 0}
+.promotion-layout .offer-content .stat{font-size:calc(160px * var(--tscale))}
+.promotion-layout .offer-content .stat-row{margin-top:12px}
+.promotion-layout .offer-content>.cols{flex:0}
+.promotion-layout .offer-content .head{white-space:pre-line;line-height:1.3}
+.promotion-layout .source{margin-top:24px}
+.promotion-layout .foot{margin-top:20px}
+.editorial-balance>.spacer{flex:.35}
+.editorial-balance>.head{margin-top:32px}
+.editorial-balance{justify-content:center}
 
 /* ---------- headline layout parts ---------- */
 .band{background:var(--brand);color:#fff;padding:44px 84px;margin:0 -84px}
@@ -361,319 +398,1999 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg-soft);color
   <b></b><button data-t="clear">ล้าง</button>
 </div>
 
-<script type="application/json" id="tplData">{
+<script type="application/json" id="tplData">
+{
   "version": 1,
   "brand": "24sEnergy",
-  "size": { "w": 1080, "h": 1350 },
+  "size": {
+    "w": 1080,
+    "h": 1350
+  },
   "groups": [
-    { "id": "head", "name": "เน้นหัวข้อ" },
-    { "id": "prod", "name": "โชว์สินค้า" },
-    { "id": "misc", "name": "อื่น ๆ" }
+    {
+      "id": "head",
+      "name": "พาดหัวและความรู้"
+    },
+    {
+      "id": "compare",
+      "name": "เปรียบเทียบและผลลัพธ์"
+    },
+    {
+      "id": "prod",
+      "name": "สินค้าและสเปก"
+    },
+    {
+      "id": "trust",
+      "name": "ผลงานและรีวิว"
+    },
+    {
+      "id": "cta",
+      "name": "ติดต่อและปิดการขาย"
+    },
+    {
+      "id": "promo_price",
+      "name": "โปรโมชั่น · ราคาและส่วนลด"
+    },
+    {
+      "id": "promo_package",
+      "name": "โปรโมชั่น · แพ็กเกจและของแถม"
+    },
+    {
+      "id": "promo_service",
+      "name": "โปรโมชั่น · บริการและดูแลระบบ"
+    },
+    {
+      "id": "promo_partner",
+      "name": "โปรโมชั่น · ลูกค้าและพาร์ทเนอร์"
+    },
+    {
+      "id": "promo_event",
+      "name": "โปรโมชั่น · เปิดตัวและกิจกรรม"
+    }
   ],
   "templates": [
     {
-      "id": "h1", "group": "head", "name": "พาดหัวเต็มเฟรม", "classes": ["dark"],
+      "id": "h1",
+      "group": "head",
+      "name": "พาดหัวเต็มเฟรม",
+      "classes": [
+        "dark",
+        "editorial-balance"
+      ],
       "blocks": [
-        { "type": "eyebrow", "text": "BESS" },
-        { "type": "rule" },
-        { "type": "head", "size": "xl", "text": "ค่าไฟโรงงาน ลดได้จริง 30%" },
-        { "type": "spacer" },
-        { "type": "foot" }
+        {
+          "type": "eyebrow",
+          "text": "BESS"
+        },
+        {
+          "type": "rule"
+        },
+        {
+          "type": "head",
+          "size": "xl",
+          "text": "ค่าไฟโรงงาน ลดได้จริง 30%"
+        },
+        {
+          "type": "spacer"
+        },
+        {
+          "type": "foot"
+        }
       ]
     },
     {
-      "id": "h2", "group": "head", "name": "คำถามนำ", "classes": [],
+      "id": "h2",
+      "group": "head",
+      "name": "คำถามนำ",
+      "classes": [
+        "editorial-balance"
+      ],
       "blocks": [
-        { "type": "qmark", "style": "font-size:220px" },
-        { "type": "head", "size": "sm", "style": "margin-top:8px", "text": "ทำไมบิลค่าไฟเดือนนี้แพงกว่าเดือนก่อน ทั้งที่ผลิตเท่าเดิม" },
-        { "type": "body", "text": "คำตอบอยู่ที่ตัวเลขบรรทัดเดียวที่คนส่วนใหญ่ข้าม" },
-        { "type": "spacer" },
-        { "type": "foot" }
+        {
+          "type": "qmark",
+          "style": "font-size:220px"
+        },
+        {
+          "type": "head",
+          "size": "sm",
+          "style": "margin-top:8px",
+          "text": "ทำไมบิลค่าไฟเดือนนี้แพงกว่าเดือนก่อน ทั้งที่ผลิตเท่าเดิม"
+        },
+        {
+          "type": "body",
+          "text": "คำตอบอยู่ที่ตัวเลขบรรทัดเดียวที่คนส่วนใหญ่ข้าม"
+        },
+        {
+          "type": "spacer"
+        },
+        {
+          "type": "foot"
+        }
       ]
     },
     {
-      "id": "h3", "group": "head", "name": "เลขนำหัวข้อ", "classes": [],
+      "id": "h3",
+      "group": "head",
+      "name": "เลขนำหัวข้อ",
+      "classes": [
+        "editorial-balance"
+      ],
       "blocks": [
-        { "type": "idx", "text": "03" },
-        { "type": "head", "size": "sm", "style": "margin-top:28px", "text": "เรื่องที่โรงงานเข้าใจผิดเรื่องแบตเตอรี่" },
-        { "type": "body", "text": "ข้อที่สามทำให้หลายที่ตัดสินใจช้าไปสองปี" },
-        { "type": "spacer" },
-        { "type": "foot" }
+        {
+          "type": "idx",
+          "text": "03"
+        },
+        {
+          "type": "head",
+          "size": "sm",
+          "style": "margin-top:28px",
+          "text": "เรื่องที่โรงงานเข้าใจผิดเรื่องแบตเตอรี่"
+        },
+        {
+          "type": "body",
+          "text": "ข้อที่สามทำให้หลายที่ตัดสินใจช้าไปสองปี"
+        },
+        {
+          "type": "spacer"
+        },
+        {
+          "type": "foot"
+        }
       ]
     },
     {
-      "id": "h4", "group": "head", "name": "ก่อน / หลัง", "classes": ["flush"],
+      "id": "h4",
+      "group": "compare",
+      "name": "ก่อน / หลัง",
+      "classes": [
+        "flush"
+      ],
       "blocks": [
-        { "type": "halfsplit", "halves": [
-          { "variant": "a", "blocks": [
-            { "type": "halfk", "text": "ก่อนติดตั้ง" },
-            { "type": "head", "size": "sm", "text": "ค่าไฟ 1.8 ล้าน / เดือน" }
-          ]},
-          { "variant": "b", "blocks": [
-            { "type": "halfk", "text": "หลังติดตั้ง" },
-            { "type": "head", "size": "sm", "text": "ค่าไฟ 1.2 ล้าน / เดือน" },
-            { "type": "wrap", "style": "margin-top:auto;padding-top:44px", "blocks": [ { "type": "foot" } ] }
-          ]}
-        ]}
-      ]
-    },
-    {
-      "id": "h5", "group": "head", "name": "คำพูดลูกค้า", "classes": ["soft"],
-      "blocks": [
-        { "type": "spacer" },
-        { "type": "quote", "text": "คืนทุนเร็วกว่าที่คิดไว้เกือบปี ตอนนี้กำลังวางแผนเฟสสอง", "byline": "ผู้จัดการโรงงาน · อุตสาหกรรมอาหาร ชลบุรี" },
-        { "type": "spacer" },
-        { "type": "foot" }
-      ]
-    },
-    {
-      "id": "h6", "group": "head", "name": "เข้าใจผิด / ที่จริง", "classes": [],
-      "blocks": [
-        { "type": "pill", "text": "เข้าใจผิดกันบ่อย" },
-        { "type": "gap", "h": 56 },
-        { "type": "tf", "items": [
-          { "mark": "no", "text": "แบตเตอรี่มีไว้ใช้ตอนไฟดับเท่านั้น" },
-          { "mark": "yes", "text": "ใช้ลดค่าไฟทุกวัน ด้วยการเลี่ยงช่วงพีค ไฟดับเป็นผลพลอยได้" }
-        ]},
-        { "type": "spacer" },
-        { "type": "foot" }
-      ]
-    },
-    {
-      "id": "h7", "group": "head", "name": "แถบหัวข้อ", "classes": [],
-      "blocks": [
-        { "type": "spacer" },
-        { "type": "date", "text": "คู่มือฉบับย่อ" },
-        { "type": "band", "style": "margin-top:24px", "text": "อ่านบิลค่าไฟโรงงานให้เป็น ใน 5 นาที" },
-        { "type": "body", "text": "รู้ว่าเงินหายไปตรงไหน ก่อนจะลงทุนอะไรก็ตาม" },
-        { "type": "spacer" },
-        { "type": "foot" }
-      ]
-    },
-    {
-      "id": "h8", "group": "head", "name": "หัวข้อ + เช็คลิสต์", "classes": [],
-      "blocks": [
-        { "type": "eyebrow", "text": "เช็คก่อนตัดสินใจ" },
-        { "type": "rule" },
-        { "type": "head", "size": "sm", "text": "โรงงานแบบไหนคุ้มกับ BESS" },
-        { "type": "checklist", "items": [
-          "ค่าไฟเกิน 5 แสนต่อเดือน",
-          "เดินเครื่องเป็นกะ มียอดพีคชัดเจน",
-          "มีพื้นที่ว่างอย่างน้อย 40 ตร.ม."
-        ]},
-        { "type": "spacer" },
-        { "type": "foot" }
-      ]
-    },
-    {
-      "id": "h9", "group": "head", "name": "คำเดียวใหญ่", "classes": ["ink"],
-      "blocks": [
-        { "type": "eyebrow", "text": "ศัพท์ที่ต้องรู้" },
-        { "type": "spacer" },
-        { "type": "bigword", "lines": ["PEAK", "SHAVING"] },
-        { "type": "body", "style": "margin-top:44px", "text": "การกดยอดใช้ไฟช่วงสูงสุดลง เพื่อไม่ให้โดนคิดค่า Demand Charge แพง" },
-        { "type": "spacer" },
-        { "type": "foot" }
-      ]
-    },
-    {
-      "id": "h10", "group": "head", "name": "เทียบ A กับ B", "classes": [],
-      "blocks": [
-        { "type": "head", "size": "sm", "text": "โซลาร์อย่างเดียว กับ โซลาร์ + แบตเตอรี่" },
-        { "type": "cols", "style": "margin-top:44px", "items": [
-          { "k": "โซลาร์อย่างเดียว", "v": "ประหยัดเฉพาะกลางวัน ไฟเหลือขายคืนราคาต่ำ" },
-          { "k": "โซลาร์ + BESS", "v": "เก็บไฟส่วนเกินไว้ใช้ตอนพีค คุมค่าไฟได้ทั้งวัน" }
-        ]},
-        { "type": "foot", "mt": 44 }
-      ]
-    },
-
-    {
-      "id": "p1", "group": "prod", "name": "สินค้าเต็มเฟรม", "classes": ["dark"],
-      "blocks": [
-        { "type": "pill", "text": "BESS" },
-        { "type": "mockup", "mod": ["bare", "grow"] },
-        { "type": "head", "size": "sm", "text": "HiTHIUM ∞Power 5 MWh" },
-        { "type": "foot", "mt": 36 }
-      ]
-    },
-    {
-      "id": "p2", "group": "prod", "name": "สินค้า + สเปก 3 ช่อง", "classes": [],
-      "blocks": [
-        { "type": "meta", "pill": "BESS", "date": "Hithium" },
-        { "type": "mockup", "mod": ["grow"] },
-        { "type": "head", "size": "sm", "style": "margin-top:36px", "text": "∞Power 5 MWh" },
-        { "type": "specs", "items": [
-          { "k": "ความจุ", "v": "5 MWh" },
-          { "k": "รอบชาร์จ", "v": "15,000" },
-          { "k": "รับประกัน", "v": "10 ปี" }
-        ]},
-        { "type": "foot", "mt": 36 }
-      ]
-    },
-    {
-      "id": "p3", "group": "prod", "name": "สินค้า + รัศมีเรืองแสง", "classes": ["ink"],
-      "blocks": [
-        { "type": "halo" },
-        { "type": "wrap", "style": "position:relative;z-index:2;display:flex;flex-direction:column;height:100%", "blocks": [
-          { "type": "eyebrow", "text": "รุ่นใหม่" },
-          { "type": "mockup", "mod": ["bare", "grow"] },
-          { "type": "head", "size": "sm", "text": "EV Charger 180 kW" },
-          { "type": "body", "size": "sm", "text": "ชาร์จรถบรรทุกไฟฟ้าเต็มใน 45 นาที" },
-          { "type": "foot", "mt": 32 }
-        ]}
-      ]
-    },
-    {
-      "id": "p4", "group": "prod", "name": "ชี้จุดเด่น 3 จุด", "classes": [],
-      "blocks": [
-        { "type": "meta", "pill": "Solar PV", "date": "N-Type TOPCon" },
-        { "type": "mockup", "mod": ["grow"] },
-        { "type": "dots", "items": [
-          "ประสิทธิภาพแปลงพลังงาน 23.2%",
-          "ทนลมได้ 2,400 Pa ผ่านมาตรฐานชายฝั่ง",
-          "รับประกันกำลังผลิต 30 ปี"
-        ]},
-        { "type": "foot", "mt": 32 }
-      ]
-    },
-    {
-      "id": "p5", "group": "prod", "name": "เทียบสองรุ่น", "classes": [],
-      "blocks": [
-        { "type": "head", "size": "xs", "text": "เลือกรุ่นไหนดี" },
-        { "type": "sideby", "style": "margin-top:36px", "columns": [
-          [
-            { "type": "mockup", "mod": ["grow"] },
-            { "type": "head", "size": "xs", "text": "215 kWh" },
-            { "type": "date", "text": "โรงงานขนาดกลาง" }
-          ],
-          [
-            { "type": "mockup", "mod": ["grow"] },
-            { "type": "head", "size": "xs", "text": "5 MWh" },
-            { "type": "date", "text": "นิคม / โรงไฟฟ้า" }
+        {
+          "type": "halfsplit",
+          "halves": [
+            {
+              "variant": "a",
+              "blocks": [
+                {
+                  "type": "halfk",
+                  "text": "ก่อนติดตั้ง"
+                },
+                {
+                  "type": "head",
+                  "size": "sm",
+                  "text": "ค่าไฟ 1.8 ล้าน / เดือน"
+                }
+              ]
+            },
+            {
+              "variant": "b",
+              "blocks": [
+                {
+                  "type": "halfk",
+                  "text": "หลังติดตั้ง"
+                },
+                {
+                  "type": "head",
+                  "size": "sm",
+                  "text": "ค่าไฟ 1.2 ล้าน / เดือน"
+                },
+                {
+                  "type": "wrap",
+                  "style": "margin-top:auto;padding-top:44px",
+                  "blocks": [
+                    {
+                      "type": "foot"
+                    }
+                  ]
+                }
+              ]
+            }
           ]
-        ]},
-        { "type": "foot", "mt": 36 }
+        }
       ]
     },
     {
-      "id": "p6", "group": "prod", "name": "ตัวเลขทับสินค้า", "classes": [],
+      "id": "h5",
+      "group": "trust",
+      "name": "คำพูดลูกค้า",
+      "classes": [
+        "soft"
+      ],
       "blocks": [
-        { "type": "tagover", "text": "5MWh" },
-        { "type": "eyebrow", "text": "BESS" },
-        { "type": "mockup", "mod": ["grow"] },
-        { "type": "stat", "value": "15k", "unit": "รอบ", "caption": "อายุใช้งานยาวกว่าลิเธียมทั่วไปเกือบเท่าตัว" },
-        { "type": "foot", "mt": 28 }
+        {
+          "type": "spacer"
+        },
+        {
+          "type": "quote",
+          "text": "คืนทุนเร็วกว่าที่คิดไว้เกือบปี ตอนนี้กำลังวางแผนเฟสสอง",
+          "byline": "ผู้จัดการโรงงาน · อุตสาหกรรมอาหาร ชลบุรี"
+        },
+        {
+          "type": "spacer"
+        },
+        {
+          "type": "foot"
+        }
       ]
     },
     {
-      "id": "p7", "group": "prod", "name": "ไลน์อัพ 4 ช่อง", "classes": [],
+      "id": "h6",
+      "group": "head",
+      "name": "เข้าใจผิด / ที่จริง",
+      "classes": [
+        "editorial-balance"
+      ],
       "blocks": [
-        { "type": "head", "size": "xs", "text": "ครบทั้งระบบ จากผู้ติดตั้งเดียว" },
-        { "type": "grid4", "style": "margin-top:36px", "items": ["BESS", "Solar", "EV", "Monitoring"] },
-        { "type": "foot", "mt": 36 }
+        {
+          "type": "pill",
+          "text": "เข้าใจผิดกันบ่อย"
+        },
+        {
+          "type": "gap",
+          "h": 56
+        },
+        {
+          "type": "tf",
+          "items": [
+            {
+              "mark": "no",
+              "text": "แบตเตอรี่มีไว้ใช้ตอนไฟดับเท่านั้น"
+            },
+            {
+              "mark": "yes",
+              "text": "ใช้ลดค่าไฟทุกวัน ด้วยการเลี่ยงช่วงพีค ไฟดับเป็นผลพลอยได้"
+            }
+          ]
+        },
+        {
+          "type": "spacer"
+        },
+        {
+          "type": "foot"
+        }
       ]
     },
     {
-      "id": "p8", "group": "prod", "name": "สินค้าซ้าย ข้อความขวา", "classes": ["soft"],
+      "id": "h7",
+      "group": "head",
+      "name": "แถบหัวข้อ",
+      "classes": [],
       "blocks": [
-        { "type": "lr", "mockup": { "mod": ["bare"] }, "blocks": [
-          { "type": "pill", "text": "Monitoring" },
-          { "type": "head", "size": "xs", "style": "margin-top:28px", "text": "ดูค่าไฟแบบเรียลไทม์ จากมือถือ" },
-          { "type": "body", "size": "sm", "text": "รู้ทันทีว่าพีควันนี้จะทะลุหรือไม่ ก่อนที่มิเตอร์จะบันทึก" }
-        ]},
-        { "type": "foot", "mt": 36 }
+        {
+          "type": "spacer"
+        },
+        {
+          "type": "date",
+          "text": "คู่มือฉบับย่อ"
+        },
+        {
+          "type": "band",
+          "style": "margin-top:24px",
+          "text": "อ่านบิลค่าไฟโรงงานให้เป็น ใน 5 นาที"
+        },
+        {
+          "type": "body",
+          "text": "รู้ว่าเงินหายไปตรงไหน ก่อนจะลงทุนอะไรก็ตาม"
+        },
+        {
+          "type": "spacer"
+        },
+        {
+          "type": "foot"
+        }
       ]
     },
     {
-      "id": "p9", "group": "prod", "name": "สินค้าบนภาพหน้างาน", "classes": ["has-photo"],
+      "id": "h8",
+      "group": "head",
+      "name": "หัวข้อ + เช็คลิสต์",
+      "classes": [
+        "editorial-balance"
+      ],
       "blocks": [
-        { "type": "photo" },
-        { "type": "eyebrow", "text": "ติดตั้งจริง" },
-        { "type": "mockup", "mod": ["bare", "grow"] },
-        { "type": "head", "size": "sm", "text": "BESS 1 MWh · นิคมอมตะซิตี้" },
-        { "type": "body", "size": "sm", "text": "ส่งมอบและเดินระบบภายใน 90 วัน" },
-        { "type": "foot", "mt": 28 }
+        {
+          "type": "eyebrow",
+          "text": "เช็คก่อนตัดสินใจ"
+        },
+        {
+          "type": "rule"
+        },
+        {
+          "type": "head",
+          "size": "sm",
+          "text": "โรงงานแบบไหนคุ้มกับ BESS"
+        },
+        {
+          "type": "checklist",
+          "items": [
+            "ค่าไฟเกิน 5 แสนต่อเดือน",
+            "เดินเครื่องเป็นกะ มียอดพีคชัดเจน",
+            "มีพื้นที่ว่างอย่างน้อย 40 ตร.ม."
+          ]
+        },
+        {
+          "type": "spacer"
+        },
+        {
+          "type": "foot"
+        }
       ]
     },
     {
-      "id": "p10", "group": "prod", "name": "สเปกเต็ม + ราคาเริ่มต้น", "classes": [],
+      "id": "h9",
+      "group": "head",
+      "name": "คำเดียวใหญ่",
+      "classes": [
+        "ink"
+      ],
       "blocks": [
-        { "type": "meta", "pill": "BESS", "date": "รุ่นขายดี" },
-        { "type": "mockup", "mod": ["grow"] },
-        { "type": "head", "size": "xs", "style": "margin-top:30px", "text": "∞Power 215 kWh" },
-        { "type": "speclist", "style": "margin-top:28px", "items": [
-          { "k": "ความจุใช้งาน", "v": "215 kWh" },
-          { "k": "กำลังจ่าย", "v": "100 kW" },
-          { "k": "ระยะคืนทุน", "v": "4–5 ปี" }
-        ]},
-        { "type": "price", "style": "margin-top:30px", "label": "ประเมินราคาให้ฟรี", "value": "ทักแชทได้เลย" },
-        { "type": "foot", "right": "24senergy.com", "mt": 26 }
-      ]
-    },
-
-    {
-      "id": "m1", "group": "misc", "name": "ปัญหา", "classes": [],
-      "blocks": [
-        { "type": "pill", "text": "ปัญหา" },
-        { "type": "head", "size": "sm", "style": "margin-top:40px", "text": "ค่า Demand Charge กินงบ 30–40% ของบิลทุกเดือน" },
-        { "type": "body", "text": "ยอดพีคแค่ 15 นาทีเดียว กำหนดค่าไฟทั้งเดือนของคุณ" },
-        { "type": "spacer" },
-        { "type": "foot" }
-      ]
-    },
-    {
-      "id": "m2", "group": "misc", "name": "เนื้อหา", "classes": [],
-      "blocks": [
-        { "type": "eyebrow", "text": "วิธีแก้" },
-        { "type": "rule" },
-        { "type": "head", "size": "sm", "text": "Peak Shaving ด้วยแบตเตอรี่" },
-        { "type": "body", "text": "ชาร์จตอนค่าไฟถูก ปล่อยออกตอนพีค ยอดที่มิเตอร์เห็นจึงไม่เคยขึ้นสูง" },
-        { "type": "spacer" },
-        { "type": "foot" }
-      ]
-    },
-    {
-      "id": "m3", "group": "misc", "name": "ตัวเลข", "classes": ["dark"],
-      "blocks": [
-        { "type": "spacer" },
-        { "type": "stat", "value": "4.2", "unit": "ปี", "caption": "ระยะคืนทุนเฉลี่ยของโรงงาน 500 kW ที่ติดตั้งกับเรา" },
-        { "type": "spacer" },
-        { "type": "foot" }
+        {
+          "type": "eyebrow",
+          "text": "ศัพท์ที่ต้องรู้"
+        },
+        {
+          "type": "spacer"
+        },
+        {
+          "type": "bigword",
+          "lines": [
+            "PEAK",
+            "SHAVING"
+          ]
+        },
+        {
+          "type": "body",
+          "style": "margin-top:44px",
+          "text": "การกดยอดใช้ไฟช่วงสูงสุดลง เพื่อไม่ให้โดนคิดค่า Demand Charge แพง"
+        },
+        {
+          "type": "spacer"
+        },
+        {
+          "type": "foot"
+        }
       ]
     },
     {
-      "id": "m4", "group": "misc", "name": "ภาพหน้างาน", "classes": ["has-photo"],
+      "id": "h10",
+      "group": "compare",
+      "name": "เทียบ A กับ B",
+      "classes": [],
       "blocks": [
-        { "type": "photo" },
-        { "type": "spacer" },
-        { "type": "eyebrow", "text": "หน้างานจริง" },
-        { "type": "rule" },
-        { "type": "head", "size": "sm", "text": "ติดตั้ง BESS 1 MWh · นิคมอมตะซิตี้" },
-        { "type": "spacer", "flex": ".25" },
-        { "type": "foot" }
+        {
+          "type": "head",
+          "size": "sm",
+          "text": "โซลาร์อย่างเดียว กับ โซลาร์ + แบตเตอรี่"
+        },
+        {
+          "type": "cols",
+          "style": "margin-top:44px",
+          "items": [
+            {
+              "k": "โซลาร์อย่างเดียว",
+              "v": "ประหยัดเฉพาะกลางวัน ไฟเหลือขายคืนราคาต่ำ"
+            },
+            {
+              "k": "โซลาร์ + BESS",
+              "v": "เก็บไฟส่วนเกินไว้ใช้ตอนพีค คุมค่าไฟได้ทั้งวัน"
+            }
+          ]
+        },
+        {
+          "type": "foot",
+          "mt": 44
+        }
       ]
     },
     {
-      "id": "m5", "group": "misc", "name": "ข่าวสาร", "classes": [],
+      "id": "p1",
+      "group": "prod",
+      "name": "สินค้าเต็มเฟรม",
+      "classes": [
+        "dark",
+        "product-focus"
+      ],
       "blocks": [
-        { "type": "meta", "pill": "ข่าวพลังงาน", "date": "05.09.2026" },
-        { "type": "rule" },
-        { "type": "head", "size": "sm", "text": "กกพ. ปรับโครงสร้างค่า Ft งวดใหม่ กระทบภาคอุตสาหกรรมอย่างไร" },
-        { "type": "body", "text": "สรุปสาระสำคัญและผลกระทบต่อต้นทุนพลังงานของโรงงาน ในสามประเด็นหลัก" },
-        { "type": "spacer" },
-        { "type": "source", "text": "ที่มา · สำนักงาน กกพ." },
-        { "type": "foot", "mt": 36 }
+        {
+          "type": "pill",
+          "text": "BESS"
+        },
+        {
+          "type": "mockup",
+          "mod": [
+            "bare",
+            "grow"
+          ]
+        },
+        {
+          "type": "head",
+          "size": "sm",
+          "text": "HiTHIUM ∞Power 5 MWh"
+        },
+        {
+          "type": "foot",
+          "mt": 36
+        }
       ]
     },
     {
-      "id": "m6", "group": "misc", "name": "ปิดท้าย / CTA", "classes": ["dark"],
+      "id": "p2",
+      "group": "prod",
+      "name": "สินค้า + สเปก 3 ช่อง",
+      "classes": [
+        "product-focus"
+      ],
       "blocks": [
-        { "type": "head", "text": "อยากรู้ว่าโรงงานคุณประหยัดได้เท่าไหร่" },
-        { "type": "body", "text": "ส่งบิลค่าไฟเดือนล่าสุดมา เราคำนวณให้ฟรี" },
-        { "type": "spacer" },
-        { "type": "pill", "text": "ทักแชทได้เลย" },
-        { "type": "foot", "right": "24senergy.com", "mt": 44 }
+        {
+          "type": "meta",
+          "pill": "BESS",
+          "date": "Hithium"
+        },
+        {
+          "type": "mockup",
+          "mod": [
+            "grow"
+          ]
+        },
+        {
+          "type": "head",
+          "size": "sm",
+          "style": "margin-top:36px",
+          "text": "∞Power 5 MWh"
+        },
+        {
+          "type": "specs",
+          "items": [
+            {
+              "k": "ความจุ",
+              "v": "5 MWh"
+            },
+            {
+              "k": "รอบชาร์จ",
+              "v": "15,000"
+            },
+            {
+              "k": "รับประกัน",
+              "v": "10 ปี"
+            }
+          ]
+        },
+        {
+          "type": "foot",
+          "mt": 36
+        }
+      ]
+    },
+    {
+      "id": "p3",
+      "group": "prod",
+      "name": "สินค้า + รัศมีเรืองแสง",
+      "classes": [
+        "ink",
+        "product-focus"
+      ],
+      "blocks": [
+        {
+          "type": "halo"
+        },
+        {
+          "type": "wrap",
+          "style": "position:relative;z-index:2;display:flex;flex-direction:column;height:100%",
+          "blocks": [
+            {
+              "type": "eyebrow",
+              "text": "รุ่นใหม่"
+            },
+            {
+              "type": "mockup",
+              "mod": [
+                "bare",
+                "grow"
+              ]
+            },
+            {
+              "type": "head",
+              "size": "sm",
+              "text": "EV Charger 180 kW"
+            },
+            {
+              "type": "body",
+              "size": "sm",
+              "text": "ชาร์จรถบรรทุกไฟฟ้าเต็มใน 45 นาที"
+            },
+            {
+              "type": "foot",
+              "mt": 32
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "p4",
+      "group": "prod",
+      "name": "ชี้จุดเด่น 3 จุด",
+      "classes": [
+        "product-focus"
+      ],
+      "blocks": [
+        {
+          "type": "meta",
+          "pill": "Solar PV",
+          "date": "N-Type TOPCon"
+        },
+        {
+          "type": "mockup",
+          "mod": [
+            "grow"
+          ]
+        },
+        {
+          "type": "dots",
+          "items": [
+            "ประสิทธิภาพแปลงพลังงาน 23.2%",
+            "ทนลมได้ 2,400 Pa ผ่านมาตรฐานชายฝั่ง",
+            "รับประกันกำลังผลิต 30 ปี"
+          ]
+        },
+        {
+          "type": "foot",
+          "mt": 32
+        }
+      ]
+    },
+    {
+      "id": "p5",
+      "group": "compare",
+      "name": "เทียบสองรุ่น",
+      "classes": [
+        "product-focus"
+      ],
+      "blocks": [
+        {
+          "type": "head",
+          "size": "xs",
+          "text": "เลือกรุ่นไหนดี"
+        },
+        {
+          "type": "sideby",
+          "style": "margin-top:36px",
+          "columns": [
+            [
+              {
+                "type": "mockup",
+                "mod": [
+                  "grow"
+                ]
+              },
+              {
+                "type": "head",
+                "size": "xs",
+                "text": "215 kWh"
+              },
+              {
+                "type": "date",
+                "text": "โรงงานขนาดกลาง"
+              }
+            ],
+            [
+              {
+                "type": "mockup",
+                "mod": [
+                  "grow"
+                ]
+              },
+              {
+                "type": "head",
+                "size": "xs",
+                "text": "5 MWh"
+              },
+              {
+                "type": "date",
+                "text": "นิคม / โรงไฟฟ้า"
+              }
+            ]
+          ]
+        },
+        {
+          "type": "foot",
+          "mt": 36
+        }
+      ]
+    },
+    {
+      "id": "p6",
+      "group": "prod",
+      "name": "ตัวเลขทับสินค้า",
+      "classes": [
+        "product-focus"
+      ],
+      "blocks": [
+        {
+          "type": "tagover",
+          "text": "5MWh"
+        },
+        {
+          "type": "eyebrow",
+          "text": "BESS"
+        },
+        {
+          "type": "mockup",
+          "mod": [
+            "grow"
+          ]
+        },
+        {
+          "type": "stat",
+          "value": "15k",
+          "unit": "รอบ",
+          "caption": "อายุใช้งานยาวกว่าลิเธียมทั่วไปเกือบเท่าตัว"
+        },
+        {
+          "type": "foot",
+          "mt": 28
+        }
+      ]
+    },
+    {
+      "id": "p7",
+      "group": "prod",
+      "name": "ไลน์อัพ 4 ช่อง",
+      "classes": [
+        "product-focus"
+      ],
+      "blocks": [
+        {
+          "type": "head",
+          "size": "xs",
+          "text": "ครบทั้งระบบ จากผู้ติดตั้งเดียว"
+        },
+        {
+          "type": "grid4",
+          "style": "margin-top:36px",
+          "items": [
+            "BESS",
+            "Solar",
+            "EV",
+            "Monitoring"
+          ]
+        },
+        {
+          "type": "foot",
+          "mt": 36
+        }
+      ]
+    },
+    {
+      "id": "p8",
+      "group": "prod",
+      "name": "สินค้าซ้าย ข้อความขวา",
+      "classes": [
+        "soft",
+        "product-focus"
+      ],
+      "blocks": [
+        {
+          "type": "lr",
+          "mockup": {
+            "mod": [
+              "bare"
+            ]
+          },
+          "blocks": [
+            {
+              "type": "pill",
+              "text": "Monitoring"
+            },
+            {
+              "type": "head",
+              "size": "xs",
+              "style": "margin-top:28px",
+              "text": "ดูค่าไฟแบบเรียลไทม์ จากมือถือ"
+            },
+            {
+              "type": "body",
+              "size": "sm",
+              "text": "รู้ทันทีว่าพีควันนี้จะทะลุหรือไม่ ก่อนที่มิเตอร์จะบันทึก"
+            }
+          ]
+        },
+        {
+          "type": "foot",
+          "mt": 36
+        }
+      ]
+    },
+    {
+      "id": "p9",
+      "group": "trust",
+      "name": "สินค้าบนภาพหน้างาน",
+      "classes": [
+        "has-photo",
+        "product-focus"
+      ],
+      "blocks": [
+        {
+          "type": "photo"
+        },
+        {
+          "type": "eyebrow",
+          "text": "ติดตั้งจริง"
+        },
+        {
+          "type": "mockup",
+          "mod": [
+            "bare",
+            "grow"
+          ]
+        },
+        {
+          "type": "head",
+          "size": "sm",
+          "text": "BESS 1 MWh · นิคมอมตะซิตี้"
+        },
+        {
+          "type": "body",
+          "size": "sm",
+          "text": "ส่งมอบและเดินระบบภายใน 90 วัน"
+        },
+        {
+          "type": "foot",
+          "mt": 28
+        }
+      ]
+    },
+    {
+      "id": "p10",
+      "group": "prod",
+      "name": "สเปกเต็ม + ราคาเริ่มต้น",
+      "classes": [
+        "product-focus"
+      ],
+      "blocks": [
+        {
+          "type": "meta",
+          "pill": "BESS",
+          "date": "รุ่นขายดี"
+        },
+        {
+          "type": "mockup",
+          "mod": [
+            "grow"
+          ]
+        },
+        {
+          "type": "head",
+          "size": "xs",
+          "style": "margin-top:30px",
+          "text": "∞Power 215 kWh"
+        },
+        {
+          "type": "speclist",
+          "style": "margin-top:28px",
+          "items": [
+            {
+              "k": "ความจุใช้งาน",
+              "v": "215 kWh"
+            },
+            {
+              "k": "กำลังจ่าย",
+              "v": "100 kW"
+            },
+            {
+              "k": "ระยะคืนทุน",
+              "v": "4–5 ปี"
+            }
+          ]
+        },
+        {
+          "type": "price",
+          "style": "margin-top:30px",
+          "label": "ประเมินราคาให้ฟรี",
+          "value": "ทักแชทได้เลย"
+        },
+        {
+          "type": "foot",
+          "right": "24senergy.com",
+          "mt": 26
+        }
+      ]
+    },
+    {
+      "id": "m1",
+      "group": "head",
+      "name": "ปัญหา",
+      "classes": [
+        "editorial-balance"
+      ],
+      "blocks": [
+        {
+          "type": "pill",
+          "text": "ปัญหา"
+        },
+        {
+          "type": "head",
+          "size": "sm",
+          "style": "margin-top:40px",
+          "text": "ค่า Demand Charge กินงบ 30–40% ของบิลทุกเดือน"
+        },
+        {
+          "type": "body",
+          "text": "ยอดพีคแค่ 15 นาทีเดียว กำหนดค่าไฟทั้งเดือนของคุณ"
+        },
+        {
+          "type": "spacer"
+        },
+        {
+          "type": "foot"
+        }
+      ]
+    },
+    {
+      "id": "m2",
+      "group": "head",
+      "name": "เนื้อหา",
+      "classes": [
+        "editorial-balance"
+      ],
+      "blocks": [
+        {
+          "type": "eyebrow",
+          "text": "วิธีแก้"
+        },
+        {
+          "type": "rule"
+        },
+        {
+          "type": "head",
+          "size": "sm",
+          "text": "Peak Shaving ด้วยแบตเตอรี่"
+        },
+        {
+          "type": "body",
+          "text": "ชาร์จตอนค่าไฟถูก ปล่อยออกตอนพีค ยอดที่มิเตอร์เห็นจึงไม่เคยขึ้นสูง"
+        },
+        {
+          "type": "spacer"
+        },
+        {
+          "type": "foot"
+        }
+      ]
+    },
+    {
+      "id": "m3",
+      "group": "compare",
+      "name": "ตัวเลข",
+      "classes": [
+        "dark"
+      ],
+      "blocks": [
+        {
+          "type": "spacer"
+        },
+        {
+          "type": "stat",
+          "value": "4.2",
+          "unit": "ปี",
+          "caption": "ระยะคืนทุนเฉลี่ยของโรงงาน 500 kW ที่ติดตั้งกับเรา"
+        },
+        {
+          "type": "spacer"
+        },
+        {
+          "type": "foot"
+        }
+      ]
+    },
+    {
+      "id": "m4",
+      "group": "trust",
+      "name": "ภาพหน้างาน",
+      "classes": [
+        "has-photo"
+      ],
+      "blocks": [
+        {
+          "type": "photo"
+        },
+        {
+          "type": "spacer"
+        },
+        {
+          "type": "eyebrow",
+          "text": "หน้างานจริง"
+        },
+        {
+          "type": "rule"
+        },
+        {
+          "type": "head",
+          "size": "sm",
+          "text": "ติดตั้ง BESS 1 MWh · นิคมอมตะซิตี้"
+        },
+        {
+          "type": "spacer",
+          "flex": ".25"
+        },
+        {
+          "type": "foot"
+        }
+      ]
+    },
+    {
+      "id": "m5",
+      "group": "trust",
+      "name": "ข่าวสาร",
+      "classes": [
+        "editorial-balance"
+      ],
+      "blocks": [
+        {
+          "type": "meta",
+          "pill": "ข่าวพลังงาน",
+          "date": "05.09.2026"
+        },
+        {
+          "type": "rule"
+        },
+        {
+          "type": "head",
+          "size": "sm",
+          "text": "กกพ. ปรับโครงสร้างค่า Ft งวดใหม่ กระทบภาคอุตสาหกรรมอย่างไร"
+        },
+        {
+          "type": "body",
+          "text": "สรุปสาระสำคัญและผลกระทบต่อต้นทุนพลังงานของโรงงาน ในสามประเด็นหลัก"
+        },
+        {
+          "type": "spacer"
+        },
+        {
+          "type": "source",
+          "text": "ที่มา · สำนักงาน กกพ."
+        },
+        {
+          "type": "foot",
+          "mt": 36
+        }
+      ]
+    },
+    {
+      "id": "m6",
+      "group": "cta",
+      "name": "ปิดท้าย / CTA",
+      "classes": [
+        "dark",
+        "editorial-balance"
+      ],
+      "blocks": [
+        {
+          "type": "head",
+          "text": "อยากรู้ว่าโรงงานคุณประหยัดได้เท่าไหร่"
+        },
+        {
+          "type": "body",
+          "text": "ส่งบิลค่าไฟเดือนล่าสุดมา เราคำนวณให้ฟรี"
+        },
+        {
+          "type": "spacer"
+        },
+        {
+          "type": "pill",
+          "text": "ทักแชทได้เลย"
+        },
+        {
+          "type": "foot",
+          "right": "24senergy.com",
+          "mt": 44
+        }
+      ]
+    },
+    {
+      "id": "promo01",
+      "group": "promo_price",
+      "name": "ส่วนลดเด่น",
+      "classes": [
+        "dark",
+        "promotion-layout"
+      ],
+      "blocks": [
+        {
+          "type": "meta",
+          "pill": "PROMOTION",
+          "date": "[ช่วงแคมเปญ]"
+        },
+        {
+          "type": "wrap",
+          "class": "offer-content",
+          "blocks": [
+            {
+              "type": "head",
+              "size": "sm",
+              "text": "อัปเกรดพลังงาน\nรับข้อเสนอพิเศษ"
+            },
+            {
+              "type": "rule"
+            },
+            {
+              "type": "stat",
+              "value": "XX",
+              "unit": "%",
+              "caption": "ส่วนลดสำหรับรุ่นที่ร่วมรายการ"
+            },
+            {
+              "type": "body",
+              "size": "sm",
+              "text": "ระบุรุ่นสินค้าและยอดสั่งซื้อขั้นต่ำ"
+            }
+          ]
+        },
+        {
+          "type": "source",
+          "text": "ตัวอย่างโปรโมชั่น · แก้ไขราคาและเงื่อนไขก่อนเผยแพร่"
+        },
+        {
+          "type": "foot",
+          "right": "ติดต่อรับข้อเสนอ"
+        }
+      ]
+    },
+    {
+      "id": "promo02",
+      "group": "promo_price",
+      "name": "ราคาเริ่มต้น",
+      "classes": [
+        "promotion-layout",
+        "product-focus"
+      ],
+      "blocks": [
+        {
+          "type": "meta",
+          "pill": "PROMOTION",
+          "date": "[ช่วงแคมเปญ]"
+        },
+        {
+          "type": "head",
+          "size": "sm",
+          "text": "Solar Rooftop\nแพ็กเกจสำหรับธุรกิจ"
+        },
+        {
+          "type": "mockup",
+          "style": "",
+          "label": "คลิกเพื่อเพิ่มภาพสินค้า",
+          "mod": [
+            "grow"
+          ]
+        },
+        {
+          "type": "price",
+          "label": "ราคาเริ่มต้น · บาท",
+          "value": "XXX,XXX"
+        },
+        {
+          "type": "body",
+          "size": "sm",
+          "text": "ระบุขนาดระบบและขอบเขตติดตั้ง"
+        },
+        {
+          "type": "source",
+          "text": "ตัวอย่างโปรโมชั่น · แก้ไขราคาและเงื่อนไขก่อนเผยแพร่"
+        },
+        {
+          "type": "foot",
+          "right": "ติดต่อรับข้อเสนอ"
+        }
+      ]
+    },
+    {
+      "id": "promo03",
+      "group": "promo_price",
+      "name": "ข้อเสนอจำกัดเวลา",
+      "classes": [
+        "ink",
+        "promotion-layout"
+      ],
+      "blocks": [
+        {
+          "type": "meta",
+          "pill": "PROMOTION",
+          "date": "[ช่วงแคมเปญ]"
+        },
+        {
+          "type": "wrap",
+          "class": "offer-content",
+          "blocks": [
+            {
+              "type": "eyebrow",
+              "text": "LIMITED OFFER"
+            },
+            {
+              "type": "head",
+              "size": "sm",
+              "text": "ดีลพลังงาน\nช่วงเวลาพิเศษ"
+            },
+            {
+              "type": "rule"
+            },
+            {
+              "type": "stat",
+              "value": "XX",
+              "unit": "วัน",
+              "caption": "ระยะเวลาแคมเปญ"
+            },
+            {
+              "type": "body",
+              "size": "sm",
+              "text": "รับข้อเสนอภายใน [วันสิ้นสุด]"
+            }
+          ]
+        },
+        {
+          "type": "source",
+          "text": "ตัวอย่างโปรโมชั่น · แก้ไขราคาและเงื่อนไขก่อนเผยแพร่"
+        },
+        {
+          "type": "foot",
+          "right": "ติดต่อรับข้อเสนอ"
+        }
+      ]
+    },
+    {
+      "id": "promo04",
+      "group": "promo_event",
+      "name": "จองล่วงหน้า",
+      "classes": [
+        "soft",
+        "promotion-layout"
+      ],
+      "blocks": [
+        {
+          "type": "meta",
+          "pill": "PROMOTION",
+          "date": "[ช่วงแคมเปญ]"
+        },
+        {
+          "type": "wrap",
+          "class": "offer-content",
+          "blocks": [
+            {
+              "type": "idx",
+              "text": "01"
+            },
+            {
+              "type": "head",
+              "size": "sm",
+              "text": "จองรอบติดตั้ง\nรับสิทธิ์ก่อน"
+            },
+            {
+              "type": "body",
+              "size": "sm",
+              "text": "สำหรับโครงการที่ยืนยันภายในกำหนด"
+            },
+            {
+              "type": "speclist",
+              "items": [
+                {
+                  "k": "เปิดจอง",
+                  "v": "[วันที่]"
+                },
+                {
+                  "k": "รอบติดตั้ง",
+                  "v": "[เดือน]"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "source",
+          "text": "ตัวอย่างโปรโมชั่น · แก้ไขราคาและเงื่อนไขก่อนเผยแพร่"
+        },
+        {
+          "type": "foot",
+          "right": "ติดต่อรับข้อเสนอ"
+        }
+      ]
+    },
+    {
+      "id": "promo05",
+      "group": "promo_package",
+      "name": "แพ็กเกจคู่",
+      "classes": [
+        "promotion-layout"
+      ],
+      "blocks": [
+        {
+          "type": "meta",
+          "pill": "PROMOTION",
+          "date": "[ช่วงแคมเปญ]"
+        },
+        {
+          "type": "wrap",
+          "class": "offer-content",
+          "blocks": [
+            {
+              "type": "head",
+              "size": "sm",
+              "text": "Solar + BESS\nข้อเสนอแพ็กคู่"
+            },
+            {
+              "type": "cols",
+              "items": [
+                {
+                  "k": "SOLAR",
+                  "v": "[ขนาด kWp]"
+                },
+                {
+                  "k": "BESS",
+                  "v": "[ความจุ kWh]"
+                }
+              ]
+            },
+            {
+              "type": "body",
+              "size": "sm",
+              "text": "ระบุรายการอุปกรณ์และบริการที่รวมในแพ็กเกจ"
+            }
+          ]
+        },
+        {
+          "type": "source",
+          "text": "ตัวอย่างโปรโมชั่น · แก้ไขราคาและเงื่อนไขก่อนเผยแพร่"
+        },
+        {
+          "type": "foot",
+          "right": "ติดต่อรับข้อเสนอ"
+        }
+      ]
+    },
+    {
+      "id": "promo06",
+      "group": "promo_package",
+      "name": "ของแถม",
+      "classes": [
+        "dark",
+        "promotion-layout"
+      ],
+      "blocks": [
+        {
+          "type": "meta",
+          "pill": "PROMOTION",
+          "date": "[ช่วงแคมเปญ]"
+        },
+        {
+          "type": "wrap",
+          "class": "offer-content",
+          "blocks": [
+            {
+              "type": "head",
+              "size": "sm",
+              "text": "เพิ่มความคุ้มค่า\nให้ระบบพลังงาน"
+            },
+            {
+              "type": "rule"
+            },
+            {
+              "type": "stat",
+              "value": "PLUS",
+              "unit": "",
+              "caption": "สิทธิพิเศษเพิ่มเติม"
+            },
+            {
+              "type": "body",
+              "size": "sm",
+              "text": "รับ [รายการของแถม] เมื่อซื้อ [สินค้าที่ร่วมรายการ]"
+            }
+          ]
+        },
+        {
+          "type": "source",
+          "text": "ตัวอย่างโปรโมชั่น · แก้ไขราคาและเงื่อนไขก่อนเผยแพร่"
+        },
+        {
+          "type": "foot",
+          "right": "ติดต่อรับข้อเสนอ"
+        }
+      ]
+    },
+    {
+      "id": "promo07",
+      "group": "promo_service",
+      "name": "บริการสำรวจ",
+      "classes": [
+        "promotion-layout",
+        "product-focus"
+      ],
+      "blocks": [
+        {
+          "type": "meta",
+          "pill": "PROMOTION",
+          "date": "[ช่วงแคมเปญ]"
+        },
+        {
+          "type": "eyebrow",
+          "text": "SITE SURVEY"
+        },
+        {
+          "type": "head",
+          "size": "sm",
+          "text": "เริ่มต้นโครงการ\nด้วยการสำรวจหน้างาน"
+        },
+        {
+          "type": "mockup",
+          "style": "",
+          "label": "คลิกเพื่อเพิ่มภาพสินค้า",
+          "mod": [
+            "grow"
+          ]
+        },
+        {
+          "type": "body",
+          "size": "sm",
+          "text": "สิทธิ์สำรวจสำหรับพื้นที่และโครงการที่ร่วมแคมเปญ"
+        },
+        {
+          "type": "source",
+          "text": "ตัวอย่างโปรโมชั่น · แก้ไขราคาและเงื่อนไขก่อนเผยแพร่"
+        },
+        {
+          "type": "foot",
+          "right": "ติดต่อรับข้อเสนอ"
+        }
+      ]
+    },
+    {
+      "id": "promo08",
+      "group": "promo_service",
+      "name": "ตรวจสุขภาพระบบ",
+      "classes": [
+        "soft",
+        "promotion-layout"
+      ],
+      "blocks": [
+        {
+          "type": "meta",
+          "pill": "PROMOTION",
+          "date": "[ช่วงแคมเปญ]"
+        },
+        {
+          "type": "wrap",
+          "class": "offer-content",
+          "blocks": [
+            {
+              "type": "head",
+              "size": "sm",
+              "text": "ดูแลระบบโซลาร์\nให้พร้อมใช้งาน"
+            },
+            {
+              "type": "checklist",
+              "items": [
+                "ตรวจแผงและอุปกรณ์",
+                "ตรวจข้อมูลการผลิต",
+                "สรุปผลพร้อมคำแนะนำ"
+              ]
+            },
+            {
+              "type": "body",
+              "size": "sm",
+              "text": "ระบุจำนวนจุดตรวจและขอบเขตบริการ"
+            }
+          ]
+        },
+        {
+          "type": "source",
+          "text": "ตัวอย่างโปรโมชั่น · แก้ไขราคาและเงื่อนไขก่อนเผยแพร่"
+        },
+        {
+          "type": "foot",
+          "right": "ติดต่อรับข้อเสนอ"
+        }
+      ]
+    },
+    {
+      "id": "promo09",
+      "group": "promo_package",
+      "name": "อัปเกรดระบบ",
+      "classes": [
+        "ink",
+        "promotion-layout",
+        "product-focus"
+      ],
+      "blocks": [
+        {
+          "type": "meta",
+          "pill": "PROMOTION",
+          "date": "[ช่วงแคมเปญ]"
+        },
+        {
+          "type": "eyebrow",
+          "text": "SYSTEM UPGRADE"
+        },
+        {
+          "type": "head",
+          "size": "sm",
+          "text": "ต่อยอดระบบเดิม\nด้วยแบตเตอรี่"
+        },
+        {
+          "type": "mockup",
+          "style": "",
+          "label": "คลิกเพื่อเพิ่มภาพสินค้า",
+          "mod": [
+            "grow"
+          ]
+        },
+        {
+          "type": "body",
+          "size": "sm",
+          "text": "รับข้อเสนอ BESS สำหรับระบบที่ผ่านการประเมิน"
+        },
+        {
+          "type": "source",
+          "text": "ตัวอย่างโปรโมชั่น · แก้ไขราคาและเงื่อนไขก่อนเผยแพร่"
+        },
+        {
+          "type": "foot",
+          "right": "ติดต่อรับข้อเสนอ"
+        }
+      ]
+    },
+    {
+      "id": "promo10",
+      "group": "promo_partner",
+      "name": "สิทธิ์ลูกค้าเดิม",
+      "classes": [
+        "dark",
+        "promotion-layout"
+      ],
+      "blocks": [
+        {
+          "type": "meta",
+          "pill": "PROMOTION",
+          "date": "[ช่วงแคมเปญ]"
+        },
+        {
+          "type": "wrap",
+          "class": "offer-content",
+          "blocks": [
+            {
+              "type": "eyebrow",
+              "text": "CUSTOMER PRIVILEGE"
+            },
+            {
+              "type": "head",
+              "size": "sm",
+              "text": "ขอบคุณที่ไว้วางใจ\n24sEnergy"
+            },
+            {
+              "type": "rule"
+            },
+            {
+              "type": "body",
+              "size": "sm",
+              "text": "สิทธิ์พิเศษสำหรับลูกค้าเดิมที่เพิ่มระบบหรือขยายโครงการ"
+            },
+            {
+              "type": "pill",
+              "text": "ระบุสิทธิ์พิเศษ"
+            }
+          ]
+        },
+        {
+          "type": "source",
+          "text": "ตัวอย่างโปรโมชั่น · แก้ไขราคาและเงื่อนไขก่อนเผยแพร่"
+        },
+        {
+          "type": "foot",
+          "right": "ติดต่อรับข้อเสนอ"
+        }
+      ]
+    },
+    {
+      "id": "promo11",
+      "group": "promo_partner",
+      "name": "แนะนำโครงการ",
+      "classes": [
+        "promotion-layout"
+      ],
+      "blocks": [
+        {
+          "type": "meta",
+          "pill": "PROMOTION",
+          "date": "[ช่วงแคมเปญ]"
+        },
+        {
+          "type": "wrap",
+          "class": "offer-content",
+          "blocks": [
+            {
+              "type": "head",
+              "size": "sm",
+              "text": "แนะนำโครงการใหม่\nรับสิทธิ์ตอบแทน"
+            },
+            {
+              "type": "dots",
+              "items": [
+                "ส่งข้อมูลโครงการ",
+                "ทีมงานตรวจสอบเงื่อนไข",
+                "รับสิทธิ์เมื่อครบเกณฑ์"
+              ]
+            },
+            {
+              "type": "body",
+              "size": "sm",
+              "text": "ระบุผู้มีสิทธิ์และเงื่อนไขการรับรางวัล"
+            }
+          ]
+        },
+        {
+          "type": "source",
+          "text": "ตัวอย่างโปรโมชั่น · แก้ไขราคาและเงื่อนไขก่อนเผยแพร่"
+        },
+        {
+          "type": "foot",
+          "right": "ติดต่อรับข้อเสนอ"
+        }
+      ]
+    },
+    {
+      "id": "promo12",
+      "group": "promo_price",
+      "name": "เงื่อนไขชำระ",
+      "classes": [
+        "soft",
+        "promotion-layout"
+      ],
+      "blocks": [
+        {
+          "type": "meta",
+          "pill": "PROMOTION",
+          "date": "[ช่วงแคมเปญ]"
+        },
+        {
+          "type": "wrap",
+          "class": "offer-content",
+          "blocks": [
+            {
+              "type": "head",
+              "size": "sm",
+              "text": "วางแผนลงทุน\nให้เหมาะกับธุรกิจ"
+            },
+            {
+              "type": "stat",
+              "value": "XX",
+              "unit": "งวด",
+              "caption": "ตัวอย่างช่องสำหรับระบุแผนชำระ"
+            },
+            {
+              "type": "body",
+              "size": "sm",
+              "text": "ระบุเงินดาวน์ อัตราดอกเบี้ย และเงื่อนไขอนุมัติ"
+            }
+          ]
+        },
+        {
+          "type": "source",
+          "text": "ตัวอย่างโปรโมชั่น · แก้ไขราคาและเงื่อนไขก่อนเผยแพร่"
+        },
+        {
+          "type": "foot",
+          "right": "ติดต่อรับข้อเสนอ"
+        }
+      ]
+    },
+    {
+      "id": "promo13",
+      "group": "promo_partner",
+      "name": "ข้อเสนอผู้รับเหมา",
+      "classes": [
+        "ink",
+        "promotion-layout"
+      ],
+      "blocks": [
+        {
+          "type": "meta",
+          "pill": "PROMOTION",
+          "date": "[ช่วงแคมเปญ]"
+        },
+        {
+          "type": "wrap",
+          "class": "offer-content",
+          "blocks": [
+            {
+              "type": "eyebrow",
+              "text": "PARTNER OFFER"
+            },
+            {
+              "type": "head",
+              "size": "sm",
+              "text": "ข้อเสนอพิเศษ\nสำหรับผู้รับเหมา"
+            },
+            {
+              "type": "speclist",
+              "items": [
+                {
+                  "k": "สินค้า",
+                  "v": "[รุ่นที่ร่วมรายการ]"
+                },
+                {
+                  "k": "จำนวนขั้นต่ำ",
+                  "v": "[จำนวน]"
+                },
+                {
+                  "k": "ระยะส่งมอบ",
+                  "v": "[ระยะเวลา]"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "source",
+          "text": "ตัวอย่างโปรโมชั่น · แก้ไขราคาและเงื่อนไขก่อนเผยแพร่"
+        },
+        {
+          "type": "foot",
+          "right": "ติดต่อรับข้อเสนอ"
+        }
+      ]
+    },
+    {
+      "id": "promo14",
+      "group": "promo_price",
+      "name": "สั่งซื้อจำนวนมาก",
+      "classes": [
+        "promotion-layout"
+      ],
+      "blocks": [
+        {
+          "type": "meta",
+          "pill": "PROMOTION",
+          "date": "[ช่วงแคมเปญ]"
+        },
+        {
+          "type": "wrap",
+          "class": "offer-content",
+          "blocks": [
+            {
+              "type": "head",
+              "size": "sm",
+              "text": "สั่งซื้อเพิ่ม\nรับข้อเสนอตามจำนวน"
+            },
+            {
+              "type": "speclist",
+              "items": [
+                {
+                  "k": "[จำนวนระดับ 1]",
+                  "v": "[ข้อเสนอ 1]"
+                },
+                {
+                  "k": "[จำนวนระดับ 2]",
+                  "v": "[ข้อเสนอ 2]"
+                },
+                {
+                  "k": "[จำนวนระดับ 3]",
+                  "v": "[ข้อเสนอ 3]"
+                }
+              ]
+            },
+            {
+              "type": "body",
+              "size": "sm",
+              "text": "ระบุรุ่นสินค้าและเงื่อนไขรวมยอด"
+            }
+          ]
+        },
+        {
+          "type": "source",
+          "text": "ตัวอย่างโปรโมชั่น · แก้ไขราคาและเงื่อนไขก่อนเผยแพร่"
+        },
+        {
+          "type": "foot",
+          "right": "ติดต่อรับข้อเสนอ"
+        }
+      ]
+    },
+    {
+      "id": "promo15",
+      "group": "promo_event",
+      "name": "เปิดตัวสินค้า",
+      "classes": [
+        "dark",
+        "promotion-layout",
+        "product-focus"
+      ],
+      "blocks": [
+        {
+          "type": "meta",
+          "pill": "PROMOTION",
+          "date": "[ช่วงแคมเปญ]"
+        },
+        {
+          "type": "eyebrow",
+          "text": "NEW ARRIVAL"
+        },
+        {
+          "type": "head",
+          "size": "sm",
+          "text": "เปิดตัว [ชื่อรุ่น]\nพร้อมข้อเสนอพิเศษ"
+        },
+        {
+          "type": "mockup",
+          "style": "",
+          "label": "คลิกเพื่อเพิ่มภาพสินค้า",
+          "mod": [
+            "grow"
+          ]
+        },
+        {
+          "type": "body",
+          "size": "sm",
+          "text": "ระบุจุดเด่นสินค้าและสิทธิ์ช่วงเปิดตัว"
+        },
+        {
+          "type": "source",
+          "text": "ตัวอย่างโปรโมชั่น · แก้ไขราคาและเงื่อนไขก่อนเผยแพร่"
+        },
+        {
+          "type": "foot",
+          "right": "ติดต่อรับข้อเสนอ"
+        }
+      ]
+    },
+    {
+      "id": "promo16",
+      "group": "promo_event",
+      "name": "งานแสดงสินค้า",
+      "classes": [
+        "promotion-layout"
+      ],
+      "blocks": [
+        {
+          "type": "meta",
+          "pill": "PROMOTION",
+          "date": "[ช่วงแคมเปญ]"
+        },
+        {
+          "type": "wrap",
+          "class": "offer-content",
+          "blocks": [
+            {
+              "type": "eyebrow",
+              "text": "MEET 24SENERGY"
+            },
+            {
+              "type": "head",
+              "size": "sm",
+              "text": "พบกันที่\n[ชื่องานแสดงสินค้า]"
+            },
+            {
+              "type": "rule"
+            },
+            {
+              "type": "speclist",
+              "items": [
+                {
+                  "k": "บูธ",
+                  "v": "[หมายเลข]"
+                },
+                {
+                  "k": "วันที่",
+                  "v": "[วันจัดงาน]"
+                },
+                {
+                  "k": "สถานที่",
+                  "v": "[สถานที่]"
+                }
+              ]
+            },
+            {
+              "type": "body",
+              "size": "sm",
+              "text": "รับข้อเสนอเฉพาะภายในงาน"
+            }
+          ]
+        },
+        {
+          "type": "source",
+          "text": "ตัวอย่างโปรโมชั่น · แก้ไขราคาและเงื่อนไขก่อนเผยแพร่"
+        },
+        {
+          "type": "foot",
+          "right": "ติดต่อรับข้อเสนอ"
+        }
+      ]
+    },
+    {
+      "id": "promo17",
+      "group": "promo_service",
+      "name": "จองสาธิต",
+      "classes": [
+        "soft",
+        "promotion-layout",
+        "product-focus"
+      ],
+      "blocks": [
+        {
+          "type": "meta",
+          "pill": "PROMOTION",
+          "date": "[ช่วงแคมเปญ]"
+        },
+        {
+          "type": "head",
+          "size": "sm",
+          "text": "สัมผัสระบบจริง\nก่อนเริ่มโครงการ"
+        },
+        {
+          "type": "mockup",
+          "style": "",
+          "label": "คลิกเพื่อเพิ่มภาพสินค้า",
+          "mod": [
+            "grow"
+          ]
+        },
+        {
+          "type": "pill",
+          "text": "นัดหมายสาธิต"
+        },
+        {
+          "type": "body",
+          "size": "sm",
+          "text": "เลือกวันและหัวข้อที่สนใจ: BESS / Solar / EV"
+        },
+        {
+          "type": "source",
+          "text": "ตัวอย่างโปรโมชั่น · แก้ไขราคาและเงื่อนไขก่อนเผยแพร่"
+        },
+        {
+          "type": "foot",
+          "right": "ติดต่อรับข้อเสนอ"
+        }
+      ]
+    },
+    {
+      "id": "promo18",
+      "group": "promo_package",
+      "name": "แพ็กเกจ EV",
+      "classes": [
+        "ink",
+        "promotion-layout",
+        "product-focus"
+      ],
+      "blocks": [
+        {
+          "type": "meta",
+          "pill": "PROMOTION",
+          "date": "[ช่วงแคมเปญ]"
+        },
+        {
+          "type": "eyebrow",
+          "text": "EV CHARGING"
+        },
+        {
+          "type": "head",
+          "size": "sm",
+          "text": "เพิ่มจุดชาร์จ\nให้พื้นที่ธุรกิจ"
+        },
+        {
+          "type": "mockup",
+          "style": "",
+          "label": "คลิกเพื่อเพิ่มภาพสินค้า",
+          "mod": [
+            "grow"
+          ]
+        },
+        {
+          "type": "body",
+          "size": "sm",
+          "text": "แพ็กเกจ [รุ่นเครื่องชาร์จ] พร้อม [บริการที่รวม]"
+        },
+        {
+          "type": "source",
+          "text": "ตัวอย่างโปรโมชั่น · แก้ไขราคาและเงื่อนไขก่อนเผยแพร่"
+        },
+        {
+          "type": "foot",
+          "right": "ติดต่อรับข้อเสนอ"
+        }
+      ]
+    },
+    {
+      "id": "promo19",
+      "group": "promo_service",
+      "name": "บริการหลังการขาย",
+      "classes": [
+        "promotion-layout"
+      ],
+      "blocks": [
+        {
+          "type": "meta",
+          "pill": "PROMOTION",
+          "date": "[ช่วงแคมเปญ]"
+        },
+        {
+          "type": "wrap",
+          "class": "offer-content",
+          "blocks": [
+            {
+              "type": "head",
+              "size": "sm",
+              "text": "ดูแลต่อเนื่อง\nด้วยแพ็กเกจบริการ"
+            },
+            {
+              "type": "stat",
+              "value": "XX",
+              "unit": "เดือน",
+              "caption": "ระยะเวลาบริการตามแพ็กเกจ"
+            },
+            {
+              "type": "body",
+              "size": "sm",
+              "text": "ระบุรอบตรวจ ระบบติดตาม และขอบเขตการรับประกัน"
+            }
+          ]
+        },
+        {
+          "type": "source",
+          "text": "ตัวอย่างโปรโมชั่น · แก้ไขราคาและเงื่อนไขก่อนเผยแพร่"
+        },
+        {
+          "type": "foot",
+          "right": "ติดต่อรับข้อเสนอ"
+        }
+      ]
+    },
+    {
+      "id": "promo20",
+      "group": "promo_price",
+      "name": "ปิดแคมเปญ",
+      "classes": [
+        "dark",
+        "promotion-layout"
+      ],
+      "blocks": [
+        {
+          "type": "meta",
+          "pill": "PROMOTION",
+          "date": "[ช่วงแคมเปญ]"
+        },
+        {
+          "type": "wrap",
+          "class": "offer-content",
+          "blocks": [
+            {
+              "type": "eyebrow",
+              "text": "LAST CALL"
+            },
+            {
+              "type": "head",
+              "size": "sm",
+              "text": "โอกาสสุดท้าย\nของแคมเปญนี้"
+            },
+            {
+              "type": "rule"
+            },
+            {
+              "type": "price",
+              "label": "สิ้นสุดรับสิทธิ์",
+              "value": "DD / MM"
+            },
+            {
+              "type": "body",
+              "size": "sm",
+              "text": "ส่งข้อมูลโครงการเพื่อรับข้อเสนอภายในวันกำหนด"
+            }
+          ]
+        },
+        {
+          "type": "source",
+          "text": "ตัวอย่างโปรโมชั่น · แก้ไขราคาและเงื่อนไขก่อนเผยแพร่"
+        },
+        {
+          "type": "foot",
+          "right": "ติดต่อรับข้อเสนอ"
+        }
       ]
     }
   ]
@@ -727,7 +2444,7 @@ const R = {
 
   mockup: b => `<div class="mockup ${(b.mod||[]).join(' ')}"${st(b)}><span class="drop">${b.label||'ลากรูปมาวาง'}</span></div>`,
 
-  stat: b => `<div${st(b)}><span class="stat"${ed}>${b.value}</span><span class="stat-unit"${ed}>${b.unit||''}</span></div>`
+  stat: b => `<div class="stat-row"${st(b)}><span class="stat"${ed}>${b.value}</span><span class="stat-unit"${ed}>${b.unit||''}</span></div>`
             + `<div class="stat-cap"${ed}>${b.caption||''}</div>`,
 
   specs: b => `<div class="specs"${st(b)}>` + b.items.map(i =>
@@ -924,6 +2641,19 @@ function enableDrop(slide){
     r.readAsDataURL(f);
   };
   slide.querySelectorAll('.photo, .mockup').forEach(target => {
+    if (target.matches('.mockup')) {
+      target.tabIndex = 0;
+      target.setAttribute('role', 'button');
+      target.setAttribute('aria-label', 'เพิ่มหรือเปลี่ยนภาพสินค้า');
+      const choose = () => {
+        const input = document.createElement('input');
+        input.type = 'file'; input.accept = 'image/*';
+        input.onchange = () => fill(target, input.files[0]);
+        input.click();
+      };
+      target.addEventListener('click', choose);
+      target.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); choose(); } });
+    }
     target.addEventListener('dragover', e => { e.preventDefault(); e.stopPropagation(); });
     target.addEventListener('drop', e => {
       e.preventDefault(); e.stopPropagation();
@@ -1068,7 +2798,7 @@ function ensureFont(google){
     + google.replace(/ /g,'+') + ':wght@400;500;600;700&display=swap';
   document.head.appendChild(link);
 }
-const DEFAULTS = { head: FONTS[0][0], body: FONTS[0][0], mono: "'JetBrains Mono',monospace" };
+const DEFAULTS = { head: FONTS[0][1][0][0], body: FONTS[0][1][0][0], mono: "'JetBrains Mono',monospace" };
 
 function fillFonts(id, val){
   const s = document.getElementById(id);

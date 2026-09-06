@@ -166,6 +166,7 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg-soft);color
   display:flex;align-items:center;justify-content:center;min-height:0}
 .mockup .drop{font-family:var(--mono);font-size:calc(22px * var(--tscale));color:var(--brand);opacity:.45;pointer-events:none}
 .mockup.filled .drop{display:none}
+.mockup.filled{background-size:cover;background-position:center;background-repeat:no-repeat}
 .mockup.bare{background:transparent}
 .mockup.grow{flex:1}
 .mockup{cursor:pointer}
@@ -2504,6 +2505,8 @@ function renderTemplate(t){
   const holder = document.createElement('div');
   holder.innerHTML = `<div class="slide ${(t.classes||[]).join(' ')}">${blocks(t.blocks)}</div>`;
   if (allBackgroundSrc) applyBackground(holder.firstElementChild, allBackgroundSrc);
+  if (window.sharedCopy) applySharedCopy(holder.firstElementChild);
+  if (window.sharedForeground) applyForeground(holder.firstElementChild);
   return holder.innerHTML;
 }
 
@@ -2998,6 +3001,116 @@ document.getElementById('exportAll').onclick = async () => {
 ['h1','m1','m2','p2','m3','m5','m6'].filter(k => BY_ID[k]).forEach(k => work.appendChild(makeSlot(k)));
 renumber();
 
+</script>
+<script>
+/* Text editor: writes plain text into the selected slide without rerendering images. */
+const editor = document.createElement('section');
+editor.id = 'copyEditor';
+editor.innerHTML = `<label>ข้อความและพรีวิว</label>
+<div id="copyTarget" class="hint">เลือกสไลด์เพื่อแก้ข้อความ</div>
+<label for="copyRaw">วางข้อความต้นฉบับ</label><textarea id="copyRaw" rows="4" placeholder="บรรทัดแรกเป็นหัวข้อ ที่เหลือเป็นรายละเอียด"></textarea>
+<button type="button" class="btn ghost" id="copySplit">แยกข้อความ</button>
+<div class="hint">แยกตามบรรทัด รองรับ ราคา: ติดต่อ: เงื่อนไข: โดยไม่ย่อหรือตัดข้อความ</div>
+<div id="copyFields"></div><button type="button" class="btn" id="copyFit">จัดข้อความให้พอดี</button>
+<div id="copyNotice" class="hint" role="status"></div>`;
+document.querySelector('.rail').insertBefore(editor, document.querySelector('.rail section'));
+const editorStyle=document.createElement('style');
+editorStyle.textContent=`#copyEditor textarea{box-sizing:border-box;width:100%;resize:vertical;background:#26262d;color:white;border:1px solid #555;border-radius:8px;padding:9px;font:14px/1.6 'IBM Plex Sans Thai',sans-serif}#copyEditor textarea:disabled{opacity:.45}.slot.copy-selected>.stage{outline:3px solid var(--brand-light);outline-offset:4px}.slide [data-copy-field]{white-space:pre-line;overflow-wrap:anywhere}`;
+document.head.append(editorStyle);
+let copySlot=null;
+const fieldDefs=[['head','หัวข้อ','.head,.quote,.bigword'],['body','รายละเอียด','.body'],['price','ราคา / ข้อเสนอ','.price,.stat'],['cta','คำชวนติดต่อ','.foot .swipe'],['terms','เงื่อนไข / ที่มา','.source']];
+const copyFields=document.getElementById('copyFields');
+for(const [key,label] of fieldDefs){const l=document.createElement('label');l.htmlFor='copy-'+key;l.textContent=label;const input=document.createElement('textarea');input.id=l.htmlFor;input.rows=2;input.dataset.field=key;copyFields.append(l,input);}
+function selectCopy(slot){
+ if(!slot || !work.contains(slot))return;
+ copySlot=slot;work.querySelectorAll('.copy-selected').forEach(s=>s.classList.remove('copy-selected'));slot.classList.add('copy-selected');
+ document.getElementById('copyTarget').textContent='กำลังแก้: '+slot.querySelector('.tag').textContent;
+ for(const [key,,selector] of fieldDefs){const el=slot.querySelector('.slide').querySelector(selector),input=document.getElementById('copy-'+key);input.disabled=!el;input.value=el?.innerText||'';input.placeholder=el?'':'เทมเพลตนี้ไม่มีช่องนี้';}
+ document.getElementById('copyNotice').textContent='พิมพ์แล้วใช้กับทุก Template ทันที';
+}
+work.addEventListener('click',e=>{const slot=e.target.closest('.slot');if(slot&&slot!==copySlot)selectCopy(slot);});
+work.addEventListener('input',e=>{if(e.target.closest('.slot')===copySlot&&e.target.closest('[contenteditable]'))selectCopy(copySlot);});
+function writeCopy(key,value){
+ window.sharedCopy ||= {};
+ window.sharedCopy[key]=value;
+ document.querySelectorAll('.slide').forEach(applySharedCopy);
+ checkSoon();return true;
+}
+function applySharedCopy(slide){
+ for(const [key,,selector] of fieldDefs){
+  if(!Object.prototype.hasOwnProperty.call(window.sharedCopy||{},key))continue;
+  let el=slide.querySelector(selector);
+  if(!el && window.sharedCopy[key]){
+   el=document.createElement('div');
+   el.className={head:'head sm',body:'body sm',price:'price',cta:'body sm',terms:'source'}[key];
+   el.contentEditable='true';
+   const anchor=key==='head'?slide.querySelector('.mockup,.spacer,.foot'):slide.querySelector('.spacer,.source,.foot');
+   if(anchor) anchor.parentNode.insertBefore(el,anchor); else slide.append(el);
+  }
+  if(el){el.textContent=window.sharedCopy[key];el.dataset.copyField=key;}
+ }
+}
+copyFields.addEventListener('input',e=>{if(e.target.dataset.field)writeCopy(e.target.dataset.field,e.target.value);});
+document.getElementById('copySplit').onclick=()=>{
+ const raw=document.getElementById('copyRaw').value.trim();if(!raw)return;
+ const parts={head:'',body:[],price:[],cta:[],terms:[]};
+ for(const line of raw.split(/\r?\n/)){const match=line.match(/^\s*(ราคา|ติดต่อ|เงื่อนไข)\s*:\s*(.*)$/);if(match)parts[{'ราคา':'price','ติดต่อ':'cta','เงื่อนไข':'terms'}[match[1]]].push(match[2]);else if(!parts.head&&line.trim())parts.head=line;else parts.body.push(line);}
+ let missing=[];
+ for(const [key,label] of fieldDefs){const value=Array.isArray(parts[key])?parts[key].join('\n').trim():parts[key];if(!value)continue;if(writeCopy(key,value))document.getElementById('copy-'+key).value=value;else missing.push(label);}
+ document.getElementById('copyNotice').textContent=missing.length?'เทมเพลตไม่มีช่อง '+missing.join(', ')+' — ข้อความต้นฉบับยังอยู่ครบ':'แยกข้อความแล้ว ตรวจแก้แต่ละช่องได้เลย';
+};
+function copyOverflow(slide){
+ const r=slide.getBoundingClientRect();
+ if(slide.scrollHeight>slide.clientHeight+2)return true;
+ const els=[...slide.querySelectorAll('[contenteditable]:not(.tagover)')];
+ for(let i=0;i<els.length;i++){const a=els[i].getBoundingClientRect();if(a.right>r.right+1||a.bottom>r.bottom+1||a.left<r.left-1||a.top<r.top-1)return true;for(let j=i+1;j<els.length;j++){if(els[i].contains(els[j])||els[j].contains(els[i]))continue;const b=els[j].getBoundingClientRect();if(Math.min(a.right,b.right)-Math.max(a.left,b.left)>1&&Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top)>1)return true;}}
+ return false;
+}
+document.getElementById('copyFit').onclick=async()=>{
+ await document.fonts.ready;
+ let failed=0;
+ for(const slide of document.querySelectorAll('.slide')){
+ const els=[...slide.querySelectorAll('[data-copy-field]')];
+ const sizes=els.map(el=>{ if(!el.dataset.copyBaseSize) el.dataset.copyBaseSize=parseFloat(getComputedStyle(el).fontSize); return Number(el.dataset.copyBaseSize); });
+ for(let step=0;step<16&&copyOverflow(slide);step++)els.forEach((el,i)=>el.style.fontSize=Math.max(Math.min(28,sizes[i]),sizes[i]*(1-(step+1)*.025))+'px');
+ if(copyOverflow(slide))failed++;
+ }
+ checkSoon();document.getElementById('copyNotice').textContent=failed?'บางแบบยังแน่นเกินไป กรุณาย่อข้อความ — ไม่มีข้อความถูกตัดทิ้ง':'จัดข้อความทุก Template แล้ว';
+};
+selectCopy(work.firstElementChild);
+document.getElementById('copyTarget').textContent='ข้อความชุดเดียวสำหรับทุก Template';
+copyFields.querySelectorAll('textarea').forEach(el=>{el.disabled=false;el.value='';el.placeholder='ใช้กับทุก Template';});
+work.addEventListener('click',()=>{
+ document.getElementById('copyTarget').textContent='ข้อความชุดเดียวสำหรับทุก Template';
+ copyFields.querySelectorAll('textarea').forEach(el=>{el.disabled=false;el.value=window.sharedCopy?.[el.dataset.field]||'';});
+});
+
+</script>
+<script>
+const foregroundPanel=document.createElement('section');
+foregroundPanel.innerHTML=`<label>ภาพสินค้า / ภาพด้านหน้า</label><button type="button" class="btn" id="foregroundBtn">เพิ่มภาพด้านหน้าทุก Template</button><input type="file" id="foregroundIn" accept="image/*" hidden><div class="hint">ใช้กับทุกช่องภาพสินค้า ครอปกึ่งกลางให้เต็มกรอบ · แบบไม่มีช่องภาพจะคงรูปแบบเดิม</div><div id="foregroundStatus" class="hint" role="status"></div>`;
+document.getElementById('allBackgroundBtn').closest('section').after(foregroundPanel);
+function applyForeground(slide){
+ slide.querySelectorAll('.mockup').forEach(el=>{
+  el.style.backgroundImage=`url('${window.sharedForeground}')`;
+  el.style.backgroundSize='cover';el.style.backgroundPosition='center';
+  el.classList.add('filled');
+ });
+}
+let foregroundRevision=0;
+document.getElementById('foregroundBtn').onclick=()=>document.getElementById('foregroundIn').click();
+document.getElementById('foregroundIn').onchange=async e=>{
+ const file=e.target.files[0];e.target.value='';if(!file)return;
+ const revision=++foregroundRevision,notice=document.getElementById('foregroundStatus');
+ notice.textContent='กำลังโหลดภาพ…';
+ try{
+  if(!file.type.startsWith('image/'))throw Error('image');
+  const src=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(file);});
+  const img=new Image();img.src=src;await img.decode();if(revision!==foregroundRevision)return;
+  window.sharedForeground=src;document.querySelectorAll('.slide').forEach(applyForeground);
+  notice.textContent='ใส่ภาพทุกช่องแล้ว · ครอปเต็มกรอบ';
+ }catch{if(revision===foregroundRevision)notice.textContent='เปิดภาพไม่ได้ กรุณาเลือกไฟล์ใหม่';}
+};
 </script>
 </body>
 </html>

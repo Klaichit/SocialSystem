@@ -2557,7 +2557,7 @@ function makeSlot(id){
       <button data-act="up">↑</button><button data-act="down">↓</button>
       <button data-act="dup">คัดลอก</button><button data-act="del">ลบ</button>
       <button data-act="png">PNG</button>
-      <button data-act="background">เพิ่มรูปพื้นหลัง</button>
+      <button data-act="background">เพิ่มรูปพื้นหลัง</button><button data-act="background-clear">ลบรูปพื้นหลัง</button>
       <input type="file" class="background-input" accept="image/*" aria-label="เลือกรูปพื้นหลัง" hidden>
     </div>
     <div class="stage"><div class="scaler">${renderTemplate(t)}</div></div>`;
@@ -2591,11 +2591,28 @@ function applyBackground(slide, src){
     if (!photo){
       photo = document.createElement('div');
       photo.className = 'photo';
+      photo.dataset.added = '1';
       slide.prepend(photo);
     }
     photo.style.backgroundImage = `url('${src}')`;
     photo.classList.add('filled');
     slide.classList.add('has-photo');
+}
+
+/* p9 and m4 design a photo block into the template, so clearing blanks it and
+   leaves it in place; a layer added for a background goes out along with the
+   has-photo treatment it brought. data-added records which is which. */
+function clearSlideBackground(slide){
+  const photo = slide.querySelector('.photo');
+  if (!photo) return;
+  if (photo.dataset.added){
+    photo.remove();
+    slide.classList.remove('has-photo');
+  } else {
+    photo.style.backgroundImage = '';
+    photo.classList.remove('filled');
+  }
+  checkSoon();
 }
 
 document.getElementById('allBackgroundBtn').onclick = () => document.getElementById('allBackgroundIn').click();
@@ -2962,6 +2979,7 @@ work.onclick = e => {
   const b = e.target.closest('.slot-bar button'); if (!b) return;
   const slot = b.closest('.slot'), act = b.dataset.act;
   if (act === 'background') slot.querySelector('.background-input').click();
+  if (act === 'background-clear') clearSlideBackground(slot.querySelector('.slide'));
   if (act === 'del') slot.remove();
   if (act === 'up' && slot.previousElementSibling) work.insertBefore(slot, slot.previousElementSibling);
   if (act === 'down' && slot.nextElementSibling) work.insertBefore(slot.nextElementSibling, slot);

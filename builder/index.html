@@ -3402,45 +3402,104 @@ function nearestRatio(img){
 }
 
 /* ---- panel ---- */
+/* the analyser gets the same full-screen treatment as the catalog: the rail is
+   already long, and reading a band map against the slide it produced needs the
+   two side by side at a size worth looking at */
 const style = document.createElement('style');
 style.textContent = `
-#imgAn .an-drop{border:1px dashed #555;border-radius:10px;padding:14px 10px;text-align:center;color:#aaa;font-size:13px;cursor:pointer}
-#imgAn .an-drop.over{border-color:var(--brand-light);color:#fff}
-#imgAn canvas{width:100%;border-radius:8px;margin-top:10px;background:#16161a;display:none}
-#imgAn .an-sw{display:flex;gap:6px;margin-top:8px}
-#imgAn .an-sw i{flex:1;height:18px;border-radius:4px;border:1px solid #0003}
-#imgAn ol{margin:8px 0 0;padding-left:18px;color:#9a9aa4;font-size:12px;line-height:1.7}
-#imgAn .an-acts{display:none;gap:6px;margin-top:10px;flex-wrap:wrap}
-#imgAn .an-acts .btn{flex:1;min-width:96px}`;
+#anWin .an-body{max-width:1320px;margin:0 auto;display:grid;gap:26px;align-items:start;
+  grid-template-columns:minmax(300px,1fr) 360px minmax(280px,340px)}
+#anWin .an-pane{min-width:0}
+#anWin h3{color:var(--brand-light);font-family:var(--mono);font-size:11px;font-weight:700;
+  letter-spacing:1px;margin-bottom:10px}
+#anWin .an-drop{border:1px dashed #4a4a55;border-radius:var(--radius);padding:26px 16px;text-align:center;
+  color:#9a9aa5;font-size:13px;line-height:1.7;cursor:pointer;background:rgba(255,255,255,.02)}
+#anWin .an-drop.over{border-color:var(--brand-light);color:#fff;background:rgba(139,77,214,.12)}
+#anWin canvas{width:100%;max-width:420px;border-radius:var(--radius);margin-top:16px;background:#16161a;display:none}
+#anWin .an-sw{display:flex;gap:6px;margin-top:12px;max-width:420px}
+#anWin .an-sw i{flex:1;height:20px;border-radius:5px;border:1px solid #0004}
+#anWin .an-stat{color:#c8c8d0;font-size:12px;line-height:1.8;margin-bottom:14px}
+#anWin ol{margin:0;padding-left:18px;color:#9a9aa5;font-size:12px;line-height:1.8}
+#anWin .an-acts{display:none;margin-top:18px}
+#anWin .an-acts .btn{margin-bottom:8px}
+#anWin .an-empty{color:#6a6a75;font-size:12px;line-height:1.8}
+#anWin .an-prev{width:360px;height:var(--stage-h);overflow:hidden;border-radius:var(--radius);
+  background:#26262d;box-shadow:0 12px 40px rgba(0,0,0,.35)}
+@media (max-width:1180px){ #anWin .an-body{grid-template-columns:1fr} }`;
 document.head.append(style);
 
-const panel = document.createElement('section');
-panel.id = 'imgAn';
-panel.innerHTML = `<label>วิเคราะห์ภาพ → เทมเพลต</label>
-<div class="an-drop" id="anDrop" tabindex="0" role="button">ลากภาพสไลด์อ้างอิงมาวาง หรือคลิกเพื่อเลือกไฟล์</div>
-<input type="file" id="anIn" accept="image/*" hidden>
-<canvas id="anMap" width="220" height="275"></canvas>
-<div class="an-sw" id="anPal"></div>
-<div class="hint" id="anStat" role="status">ถอดโครงจากภาพ: พื้นหลัง แถบข้อความ ช่องภาพ และเส้นแบ่งคอลัมน์ · ข้อความออกมาเป็นตัวอย่างให้พิมพ์ทับ</div>
-<ol id="anReport"></ol>
-<div class="an-acts" id="anActs">
-  <button type="button" class="btn" id="anAdd">เพิ่มเข้าชุด</button>
-  <button type="button" class="btn ghost" id="anRatio">ปรับสัดส่วน</button>
-  <button type="button" class="btn ghost" id="anJson">ดาวน์โหลด JSON</button>
-</div>`;
-document.getElementById('picker').before(panel);
+const railBtn = document.createElement('section');
+railBtn.innerHTML = `<label>วิเคราะห์ภาพ → เทมเพลต</label>
+<button type="button" class="btn" id="anOpen">เปิดหน้าต่างวิเคราะห์ภาพ</button>
+<div class="hint">ลากภาพสไลด์อ้างอิงเข้าไป เครื่องมือจะถอดโครงออกมาเป็นเทมเพลตใหม่</div>`;
+document.getElementById('picker').before(railBtn);
 
-const drop = panel.querySelector('#anDrop'), fileIn = panel.querySelector('#anIn');
-const mapCv = panel.querySelector('#anMap'), pal = panel.querySelector('#anPal');
-const stat = panel.querySelector('#anStat'), rep = panel.querySelector('#anReport');
-const acts = panel.querySelector('#anActs'), ratioBtn = panel.querySelector('#anRatio');
+const win = document.createElement('div');
+win.className = 'gal';
+win.id = 'anWin';
+win.hidden = true;
+win.innerHTML = `
+<div class="gal-top">
+  <div>
+    <h2>วิเคราะห์ภาพ → เทมเพลต</h2>
+    <div class="hint">อ่านโครงจากภาพอ้างอิง ไม่มี OCR — ข้อความออกมาเป็นตัวอย่างให้พิมพ์ทับ</div>
+  </div>
+  <button class="gal-close" id="anClose">ปิด</button>
+</div>
+<div class="an-body">
+  <div class="an-pane">
+    <h3>ภาพต้นฉบับ</h3>
+    <div class="an-drop" id="anDrop" tabindex="0" role="button">ลากภาพสไลด์อ้างอิงมาวางตรงไหนก็ได้ในหน้านี้<br>หรือคลิกเพื่อเลือกไฟล์</div>
+    <input type="file" id="anIn" accept="image/*" hidden>
+    <canvas id="anMap" width="420" height="525"></canvas>
+    <div class="an-sw" id="anPal"></div>
+  </div>
+  <div class="an-pane">
+    <h3>เทมเพลตที่ได้</h3>
+    <div class="an-prev" id="anPrev"></div>
+    <div class="an-acts" id="anActs">
+      <button type="button" class="btn" id="anAdd">เพิ่มเข้าชุด</button>
+      <button type="button" class="btn ghost" id="anRatio">ปรับสัดส่วน</button>
+      <button type="button" class="btn ghost" id="anJson">ดาวน์โหลด JSON</button>
+    </div>
+  </div>
+  <div class="an-pane">
+    <h3>อ่านได้ว่า</h3>
+    <div class="an-stat" id="anStat" role="status"></div>
+    <ol id="anReport"></ol>
+    <div class="an-empty" id="anEmpty">ยังไม่มีภาพ · วางภาพแล้วจะขึ้นว่าแถบไหนกลายเป็นบล็อกอะไร
+      สีม่วงในแผนที่คือข้อความ สีเขียวคือช่องภาพ</div>
+  </div>
+</div>`;
+document.body.append(win);
+
+const drop = win.querySelector('#anDrop'), fileIn = win.querySelector('#anIn');
+const mapCv = win.querySelector('#anMap'), pal = win.querySelector('#anPal');
+const stat = win.querySelector('#anStat'), rep = win.querySelector('#anReport');
+const acts = win.querySelector('#anActs'), ratioBtn = win.querySelector('#anRatio');
+const prev = win.querySelector('#anPrev'), empty = win.querySelector('#anEmpty');
 let made = null, madeSrc = null, madeRatio = null, seq = 0;
+
+function openWin(){
+  win.hidden = false; win.classList.add('on');
+  document.body.style.overflow = 'hidden';
+}
+function closeWin(){
+  win.classList.remove('on'); win.hidden = true;
+  document.body.style.overflow = '';
+}
+document.getElementById('anOpen').onclick = openWin;
+win.querySelector('#anClose').onclick = closeWin;
+win.addEventListener('click', e => { if (e.target === win) closeWin(); });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && win.classList.contains('on')) closeWin();
+});
 
 drop.onclick = () => fileIn.click();
 drop.onkeydown = e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); fileIn.click(); } };
-drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('over'); });
-drop.addEventListener('dragleave', () => drop.classList.remove('over'));
-drop.addEventListener('drop', e => {
+win.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('over'); });
+win.addEventListener('dragleave', e => { if (e.target === win) drop.classList.remove('over'); });
+win.addEventListener('drop', e => {
   e.preventDefault(); e.stopPropagation(); drop.classList.remove('over');
   run(e.dataTransfer.files[0]);
 });
@@ -3448,20 +3507,20 @@ fileIn.onchange = e => { const f = e.target.files[0]; e.target.value = ''; run(f
 
 /* the band map, drawn over a thumbnail so the reading can be checked by eye */
 function drawMap(img, s, list){
-  mapCv.width = 220;
-  mapCv.height = Math.round(220 * s.h / s.w);
+  mapCv.width = 420;
+  mapCv.height = Math.round(420 * s.h / s.w);
   const ctx = mapCv.getContext('2d');
   ctx.drawImage(img, 0, 0, mapCv.width, mapCv.height);
   ctx.fillStyle = 'rgba(10,10,14,.45)';
   ctx.fillRect(0, 0, mapCv.width, mapCv.height);
   const k = mapCv.width / s.w;
-  ctx.lineWidth = 1.5;
-  ctx.font = '10px monospace';
+  ctx.lineWidth = 2;
+  ctx.font = 'bold 13px monospace';
   list.forEach((b, i) => {
     const col = b.photo ? '#22c55e' : '#8b4dd6';
     ctx.strokeStyle = col; ctx.fillStyle = col;
     ctx.strokeRect(b.x0*k, b.y0*k, (b.x1-b.x0+1)*k, b.h*k);
-    ctx.fillText(String(i+1), b.x0*k + 3, b.y0*k + 11);
+    ctx.fillText(String(i+1), b.x0*k + 4, b.y0*k + 14);
   });
   mapCv.style.display = 'block';
 }
@@ -3469,6 +3528,7 @@ function drawMap(img, s, list){
 async function run(file){
   if (!file) return;
   acts.style.display = 'none'; rep.innerHTML = ''; pal.innerHTML = '';
+  empty.style.display = 'none';
   if (!file.type.startsWith('image/')){ stat.textContent = 'ไฟล์นี้ไม่ใช่รูปภาพ'; return; }
   stat.textContent = 'กำลังวิเคราะห์…';
   try {
@@ -3509,17 +3569,18 @@ async function run(file){
       + ` · ${blks.length} บล็อก · สัดส่วนใกล้ ${madeRatio}`;
     ratioBtn.textContent = madeRatio === RATIO ? 'สัดส่วนตรงแล้ว' : 'ปรับเป็น ' + madeRatio;
     ratioBtn.disabled = madeRatio === RATIO;
-    acts.style.display = 'flex';
+    acts.style.display = 'block';
+    showPreview();
   } catch (err) {
     stat.textContent = 'วิเคราะห์ไม่ได้ · ' + err.message;
+    empty.style.display = 'block';
   }
 }
 
 /* the analysed image goes straight into the slot it produced, so the layout can
    be judged against the original rather than against empty grey boxes */
-function seed(slot){
-  const slide = slot.querySelector('.slide');
-  slide.querySelectorAll('.photo, .mockup').forEach(t => {
+function seed(root){
+  root.querySelectorAll('.photo, .mockup').forEach(t => {
     t.style.backgroundImage = `url('${madeSrc}')`;
     t.style.backgroundSize = 'cover';
     t.style.backgroundPosition = 'center';
@@ -3527,15 +3588,22 @@ function seed(slot){
   });
 }
 
-panel.querySelector('#anAdd').onclick = () => {
+function showPreview(){
+  prev.innerHTML = `<div class="scaler">${renderTemplate(made)}</div>`;
+  if (logoSrc) prev.querySelectorAll('.logo').forEach(l => l.innerHTML = `<img src="${logoSrc}">`);
+  seed(prev);
+}
+
+win.querySelector('#anAdd').onclick = () => {
   if (!made) return;
   if (!DATA.groups.some(g => g.id === 'ref')) DATA.groups.push({ id:'ref', name:'จากภาพวิเคราะห์' });
   DATA.templates = DATA.templates.filter(t => t.id !== made.id).concat(made);
   indexData(); buildPickers(); galBuilt = false;
   const slot = makeSlot(made.id);
   work.appendChild(slot);
-  seed(slot);
+  seed(slot.querySelector('.slide'));
   renumber();
+  closeWin();
   slot.scrollIntoView({ behavior:'smooth', block:'center' });
   say(`เพิ่ม ${made.name} เข้าชุดเทมเพลตแล้ว · ดาวน์โหลด templates.json เพื่อเก็บถาวร`);
 };
@@ -3546,9 +3614,10 @@ ratioBtn.onclick = () => {
   document.getElementById('ratioSel').value = madeRatio;
   ratioBtn.disabled = true;
   ratioBtn.textContent = 'สัดส่วนตรงแล้ว';
+  showPreview();
 };
 
-panel.querySelector('#anJson').onclick = () => {
+win.querySelector('#anJson').onclick = () => {
   if (!made) return;
   const blob = new Blob([JSON.stringify(made, null, 2)], { type:'application/json' });
   const a = document.createElement('a');

@@ -3130,5 +3130,435 @@ document.getElementById('foregroundIn').onchange=async e=>{
  }catch{if(revision===foregroundRevision)notice.textContent='เปิดภาพไม่ได้ กรุณาเลือกไฟล์ใหม่';}
 };
 </script>
+<script>
+/* ===== image analysis → template =====
+   Turns a reference slide image into a block list. No OCR and no network: the
+   image goes on a canvas, the analyser measures where ink sits against the
+   background, how tall each text line is, where the vertical gutters fall and
+   which bands are photographic, then maps that geometry onto the block types
+   this builder already has. Wording comes out as placeholders — layout is what
+   is recovered, and every generated template still ends with foot. */
+(() => {
+
+const AW = 220;          /* analysis width; height follows the source aspect */
+const INK = 62;          /* summed channel distance from the background that counts as content */
+const ROW_ON = 0.012;    /* share of a row that must be content for the row to be "on" */
+
+const lum = (r,g,b) => (0.2126*r + 0.7152*g + 0.0722*b) / 255;
+const sat = (r,g,b) => { const mx = Math.max(r,g,b); return mx ? (mx - Math.min(r,g,b)) / mx : 0; };
+const hex = (r,g,b) => '#' + [r,g,b].map(v => Math.round(v).toString(16).padStart(2,'0')).join('');
+function hue(r,g,b){
+  const mx = Math.max(r,g,b), mn = Math.min(r,g,b), d = mx - mn;
+  if (!d) return 0;
+  let h = mx === r ? (g - b) / d % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  h *= 60; return h < 0 ? h + 360 : h;
+}
+const purple = (r,g,b) => { const hh = hue(r,g,b); return hh >= 245 && hh <= 305 && sat(r,g,b) > 0.12; };
+
+/* ---- read the image at analysis size ---- */
+function sample(img){
+  const w = AW, h = Math.max(1, Math.round(img.naturalHeight * AW / img.naturalWidth));
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  const ctx = c.getContext('2d', {willReadFrequently:true});
+  ctx.drawImage(img, 0, 0, w, h);
+  const d = ctx.getImageData(0, 0, w, h).data;
+  return { w, h, d, at: (x,y) => { const i = (y*w + x) * 4; return [d[i], d[i+1], d[i+2]]; } };
+}
+
+/* ---- background colour, from the frame of the image ---- */
+function background(s){
+  const bins = new Map();
+  const add = (x,y) => {
+    const p = s.at(x,y);
+    const k = (p[0]>>4) + ',' + (p[1]>>4) + ',' + (p[2]>>4);
+    const e = bins.get(k) || [0,0,0,0];
+    e[0] += p[0]; e[1] += p[1]; e[2] += p[2]; e[3]++;
+    bins.set(k, e);
+  };
+  for (let x = 0; x < s.w; x++) for (let y = 0; y < 3; y++){ add(x,y); add(x, s.h-1-y); }
+  for (let y = 0; y < s.h; y++) for (let x = 0; x < 3; x++){ add(x,y); add(s.w-1-x, y); }
+  let best = [0,0,0,1], total = 0;
+  bins.forEach(e => { total += e[3]; if (e[3] > best[3]) best = e; });
+  return { rgb: [best[0]/best[3], best[1]/best[3], best[2]/best[3]], even: best[3] / total };
+}
+
+/* ---- content mask, row profile ---- */
+function mask(s, bg){
+  const m = new Uint8Array(s.w * s.h), row = new Float32Array(s.h);
+  let on = 0;
+  for (let y = 0; y < s.h; y++){
+    let n = 0;
+    for (let x = 0; x < s.w; x++){
+      const p = s.at(x,y);
+      const dist = Math.abs(p[0]-bg[0]) + Math.abs(p[1]-bg[1]) + Math.abs(p[2]-bg[2]);
+      if (dist > INK){ m[y*s.w + x] = 1; n++; on++; }
+    }
+    row[y] = n / s.w;
+  }
+  return { m, row, fill: on / (s.w * s.h) };
+}
+
+/* ---- rows on → lines → bands ---- */
+function bands(s, mk){
+  const lines = [];
+  let start = -1;
+  for (let y = 0; y <= s.h; y++){
+    const on = y < s.h && mk.row[y] > ROW_ON;
+    if (on && start < 0) start = y;
+    if (!on && start >= 0){ if (y - start >= 1) lines.push([start, y-1]); start = -1; }
+  }
+  const out = [];
+  for (const ln of lines){
+    const prev = out[out.length-1];
+    const lh = ln[1] - ln[0] + 1;
+    if (prev){
+      const tail = prev.lines[prev.lines.length-1];
+      const ph = tail[1] - tail[0] + 1;
+      const gap = ln[0] - tail[1] - 1;
+      /* leading inside a paragraph or a list runs up to about twice the line
+         height; anything looser, or a line of a different size, starts a new
+         band rather than joining this one */
+      const near = Math.max(3, Math.min(lh, ph) * 2.2);
+      const alike = lh <= ph * 1.7 && ph <= lh * 1.7;
+      if (gap <= near && alike){ prev.lines.push(ln); prev.y1 = ln[1]; continue; }
+    }
+    out.push({ y0: ln[0], y1: ln[1], lines: [ln] });
+  }
+  return out;
+}
+
+/* ---- what a band is made of ---- */
+function describe(s, mk, b){
+  const cols = new Float32Array(s.w);
+  let n = 0;
+  for (let y = b.y0; y <= b.y1; y++) for (let x = 0; x < s.w; x++)
+    if (mk.m[y*s.w + x]){ cols[x]++; n++; }
+  let x0 = s.w, x1 = 0;
+  for (let x = 0; x < s.w; x++) if (cols[x]){ if (x < x0) x0 = x; x1 = x; }
+  if (x0 > x1){ x0 = 0; x1 = s.w - 1; }
+
+  /* gutters: empty columns inside the band, wide enough to read as a split */
+  const groups = [];
+  const minGut = Math.max(3, Math.round(s.w * 0.035));
+  let gs = -1, run = 0;
+  for (let x = x0; x <= x1 + 1; x++){
+    const filled = x <= x1 && cols[x] > 0;
+    if (filled){
+      if (run >= minGut && gs >= 0){ groups.push([gs, x - run - 1]); gs = x; }
+      else if (gs < 0) gs = x;
+      run = 0;
+    } else { run++; }
+  }
+  if (gs >= 0) groups.push([gs, x1]);
+
+  /* colour richness — a photo carries far more distinct buckets than type does */
+  const seen = new Set();
+  let samples = 0, satSum = 0;
+  for (let y = b.y0; y <= b.y1; y += 2) for (let x = x0; x <= x1; x += 2){
+    const p = s.at(x,y);
+    seen.add((p[0]>>3) + ',' + (p[1]>>3) + ',' + (p[2]>>3));
+    satSum += sat(p[0], p[1], p[2]);
+    samples++;
+  }
+  const area = (b.y1 - b.y0 + 1) * (x1 - x0 + 1);
+  const density = area ? n / area : 0;
+  const rich = samples ? seen.size / samples : 0;
+
+  /* a bullet or number leading each line shows up as a gap near the left edge */
+  let leds = 0;
+  for (const [ly0, ly1] of b.lines){
+    let hit = false, gapRun = 0, sawInk = false;
+    const scan = Math.round((x1 - x0) * 0.28);
+    for (let x = x0; x <= x0 + scan; x++){
+      let ink = false;
+      for (let y = ly0; y <= ly1 && !ink; y++) ink = !!mk.m[y*s.w + x];
+      if (ink){ if (sawInk && gapRun >= 2) hit = true; sawInk = true; gapRun = 0; }
+      else if (sawInk) gapRun++;
+    }
+    if (hit) leds++;
+  }
+
+  const mid = (x0 + x1) / 2 / s.w;
+  return {
+    y0: b.y0, y1: b.y1, h: b.y1 - b.y0 + 1, lines: b.lines.length,
+    x0, x1, wide: (x1 - x0 + 1) / s.w, groups: groups.length, spans: groups,
+    leadNarrow: groups.length === 2
+      && (groups[0][1] - groups[0][0] + 1) / s.w < 0.13
+      && (groups[1][0] - groups[0][1]) / s.w < 0.14,
+    density, rich, satur: samples ? satSum / samples : 0,
+    photo: density > 0.55 && rich > 0.12,
+    centered: (x1 - x0 + 1) / s.w < 0.8 && Math.abs(mid - 0.5) < 0.04
+      && Math.abs(x0 - (s.w - 1 - x1)) < s.w * 0.035,
+    bullets: leds >= Math.max(2, Math.ceil(b.lines.length * 0.6)) && b.lines.length >= 2
+  };
+}
+
+/* ---- geometry → blocks ---- */
+const TXT = {
+  eyebrow: 'หัวข้อเล็ก',
+  xl: 'พาดหัวใหญ่',
+  head: 'พาดหัวจากภาพต้นฉบับ',
+  sm: 'หัวข้อรอง',
+  body: 'รายละเอียดเนื้อหา แทนที่ด้วยข้อความจริง'
+};
+
+/* a head kept its line count in the source image; <br> keeps it here too */
+const many = (t, n) => Array.from({length:Math.max(1,n)}, () => t).join('<br>');
+
+function toBlocks(list, s, bgInfo, mk){
+  const H = s.h, out = [], report = [];
+  const bg = bgInfo.rgb;
+  const classes = [];
+  const L = lum(bg[0], bg[1], bg[2]);
+  if (L < 0.22) classes.push('ink');
+  else if (L < 0.6 && purple(bg[0], bg[1], bg[2])) classes.push('dark');
+  else if (purple(bg[0], bg[1], bg[2])) classes.push('soft');
+
+  const fullPhoto = bgInfo.even < 0.32 || mk.fill > 0.82;
+  if (fullPhoto){
+    classes.push('has-photo');
+    out.push({ type:'photo' });
+    report.push('พื้นหลังเป็นภาพเต็มใบ → photo + class has-photo');
+  }
+
+  const [, OH] = outSize();
+  const px = frac => Math.max(12, Math.min(140, Math.round(frac * OH)));
+  const gaps = [];
+  for (let i = 1; i < list.length; i++) gaps.push((list[i].y0 - list[i-1].y1 - 1) / H);
+  const biggest = gaps.length ? Math.max(...gaps) : 0;
+  let spacerUsed = false;
+  let footSeen = false;
+
+  list.forEach((b, i) => {
+    const top = b.y0 / H, hFrac = b.h / H, lineH = hFrac / b.lines;
+    const last = i === list.length - 1;
+    const style = b.centered ? 'text-align:center' : undefined;
+    const add = (blk, note) => {
+      if (style && ['head','body','eyebrow','bigword'].includes(blk.type)) blk.style = style;
+      out.push(blk);
+      report.push(`แถบ ${i+1} · บน ${Math.round(top*100)}% สูง ${Math.round(hFrac*100)}% · ${b.lines} บรรทัด → ${note}`);
+    };
+
+    if (b.photo){
+      if (fullPhoto && hFrac > 0.6){
+        report.push(`แถบ ${i+1} · เป็นส่วนหนึ่งของภาพเต็มใบ → ไม่เพิ่มบล็อกซ้ำ`);
+      } else if (hFrac > 0.72 && b.wide > 0.9 && !fullPhoto){
+        classes.push('has-photo');
+        out.unshift({ type:'photo' });
+        report.push(`แถบ ${i+1} · ภาพคลุมเกือบทั้งใบ → photo + class has-photo`);
+      } else {
+        add({ type:'mockup', mod: hFrac > 0.3 ? ['grow'] : [] }, hFrac > 0.3 ? 'mockup (grow)' : 'mockup');
+      }
+    }
+    else if (hFrac < 0.008 && b.wide < 0.4) add({ type:'rule' }, 'rule');
+    else if (last && top > 0.84){
+      add({ type:'foot', right:'ปัดต่อ →' }, 'foot');
+      footSeen = true;
+    }
+    else if (i === 0 && top < 0.12 && b.lines === 1 && b.groups >= 2)
+      add({ type:'meta', pill:'BESS', date:'24sEnergy' }, 'meta (badge ซ้าย + ข้อความขวา)');
+    else if (b.groups >= 3)
+      add({ type:'specs', items: Array.from({length:Math.min(b.groups,3)}, (_,k) => ({ k:'สเปก ' + (k+1), v:'ค่า' })) }, `specs ${Math.min(b.groups,3)} ช่อง`);
+    else if (b.groups === 2 && b.leadNarrow)
+      add({ type:'checklist', items: Array.from({length:b.lines}, (_,k) => 'ข้อความข้อที่ ' + (k+1)) }, `checklist ${b.lines} ข้อ (เจอสัญลักษณ์นำหน้า)`);
+    else if (b.groups === 2 && b.lines <= 2)
+      add({ type:'cols', items:[{k:'หัวข้อซ้าย',v:'รายละเอียด'},{k:'หัวข้อขวา',v:'รายละเอียด'}] }, 'cols สองคอลัมน์');
+    else if (b.groups === 2)
+      add({ type:'speclist', items: Array.from({length:b.lines}, (_,k) => ({ k:'รายการ ' + (k+1), v:'ค่า' })) }, `speclist ${b.lines} แถว`);
+    else if (b.bullets)
+      add({ type:'checklist', items: Array.from({length:b.lines}, (_,k) => 'ข้อความข้อที่ ' + (k+1)) }, `checklist ${b.lines} ข้อ`);
+    else if (b.lines === 1 && lineH > 0.055 && b.wide < 0.55)
+      add({ type:'stat', value:'00', unit:'%', caption:'คำอธิบายตัวเลข' }, 'stat (ตัวเลขเดี่ยวขนาดใหญ่)');
+    else if (lineH > 0.062)
+      add({ type:'head', size:'xl', text:many(TXT.xl, b.lines) }, 'head xl');
+    else if (lineH > 0.040)
+      add({ type:'head', text:many(TXT.head, b.lines) }, 'head');
+    else if (lineH > 0.028)
+      add(b.lines === 1 ? { type:'head', size:'sm', text:TXT.sm } : { type:'body', text:TXT.body }, b.lines === 1 ? 'head sm' : 'body');
+    else if (b.lines === 1 && top < 0.14)
+      add({ type:'eyebrow', text:TXT.eyebrow }, 'eyebrow');
+    else
+      add({ type:'body', size:'sm', text:TXT.body }, 'body sm');
+
+    const gap = gaps[i];
+    if (gap === undefined) return;
+    if (!spacerUsed && gap === biggest && gap > 0.08){ out.push({ type:'spacer', flex:1 }); spacerUsed = true; }
+    else if (gap > 0.035) out.push({ type:'gap', h: px(gap) });
+  });
+
+  if (!footSeen){
+    if (!spacerUsed) out.push({ type:'spacer', flex:1 });
+    out.push({ type:'foot', right:'ปัดต่อ →' });
+    report.push('ไม่พบแถบล่าง → เติม foot ให้เอง (ทุกสไลด์ต้องมีโลโก้)');
+  }
+  return { blocks: out, classes, report };
+}
+
+function nearestRatio(img){
+  const a = img.naturalWidth / img.naturalHeight;
+  return Object.entries(RATIOS).reduce((best, [k, [w,h]]) =>
+    Math.abs(w/h - a) < Math.abs(best[1] - a) ? [k, w/h] : best, ['4:5', 0.8])[0];
+}
+
+/* ---- panel ---- */
+const style = document.createElement('style');
+style.textContent = `
+#imgAn .an-drop{border:1px dashed #555;border-radius:10px;padding:14px 10px;text-align:center;color:#aaa;font-size:13px;cursor:pointer}
+#imgAn .an-drop.over{border-color:var(--brand-light);color:#fff}
+#imgAn canvas{width:100%;border-radius:8px;margin-top:10px;background:#16161a;display:none}
+#imgAn .an-sw{display:flex;gap:6px;margin-top:8px}
+#imgAn .an-sw i{flex:1;height:18px;border-radius:4px;border:1px solid #0003}
+#imgAn ol{margin:8px 0 0;padding-left:18px;color:#9a9aa4;font-size:12px;line-height:1.7}
+#imgAn .an-acts{display:none;gap:6px;margin-top:10px;flex-wrap:wrap}
+#imgAn .an-acts .btn{flex:1;min-width:96px}`;
+document.head.append(style);
+
+const panel = document.createElement('section');
+panel.id = 'imgAn';
+panel.innerHTML = `<label>วิเคราะห์ภาพ → เทมเพลต</label>
+<div class="an-drop" id="anDrop" tabindex="0" role="button">ลากภาพสไลด์อ้างอิงมาวาง หรือคลิกเพื่อเลือกไฟล์</div>
+<input type="file" id="anIn" accept="image/*" hidden>
+<canvas id="anMap" width="220" height="275"></canvas>
+<div class="an-sw" id="anPal"></div>
+<div class="hint" id="anStat" role="status">ถอดโครงจากภาพ: พื้นหลัง แถบข้อความ ช่องภาพ และเส้นแบ่งคอลัมน์ · ข้อความออกมาเป็นตัวอย่างให้พิมพ์ทับ</div>
+<ol id="anReport"></ol>
+<div class="an-acts" id="anActs">
+  <button type="button" class="btn" id="anAdd">เพิ่มเข้าชุด</button>
+  <button type="button" class="btn ghost" id="anRatio">ปรับสัดส่วน</button>
+  <button type="button" class="btn ghost" id="anJson">ดาวน์โหลด JSON</button>
+</div>`;
+document.getElementById('picker').before(panel);
+
+const drop = panel.querySelector('#anDrop'), fileIn = panel.querySelector('#anIn');
+const mapCv = panel.querySelector('#anMap'), pal = panel.querySelector('#anPal');
+const stat = panel.querySelector('#anStat'), rep = panel.querySelector('#anReport');
+const acts = panel.querySelector('#anActs'), ratioBtn = panel.querySelector('#anRatio');
+let made = null, madeSrc = null, madeRatio = null, seq = 0;
+
+drop.onclick = () => fileIn.click();
+drop.onkeydown = e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); fileIn.click(); } };
+drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('over'); });
+drop.addEventListener('dragleave', () => drop.classList.remove('over'));
+drop.addEventListener('drop', e => {
+  e.preventDefault(); e.stopPropagation(); drop.classList.remove('over');
+  run(e.dataTransfer.files[0]);
+});
+fileIn.onchange = e => { const f = e.target.files[0]; e.target.value = ''; run(f); };
+
+/* the band map, drawn over a thumbnail so the reading can be checked by eye */
+function drawMap(img, s, list){
+  mapCv.width = 220;
+  mapCv.height = Math.round(220 * s.h / s.w);
+  const ctx = mapCv.getContext('2d');
+  ctx.drawImage(img, 0, 0, mapCv.width, mapCv.height);
+  ctx.fillStyle = 'rgba(10,10,14,.45)';
+  ctx.fillRect(0, 0, mapCv.width, mapCv.height);
+  const k = mapCv.width / s.w;
+  ctx.lineWidth = 1.5;
+  ctx.font = '10px monospace';
+  list.forEach((b, i) => {
+    const col = b.photo ? '#22c55e' : '#8b4dd6';
+    ctx.strokeStyle = col; ctx.fillStyle = col;
+    ctx.strokeRect(b.x0*k, b.y0*k, (b.x1-b.x0+1)*k, b.h*k);
+    ctx.fillText(String(i+1), b.x0*k + 3, b.y0*k + 11);
+  });
+  mapCv.style.display = 'block';
+}
+
+async function run(file){
+  if (!file) return;
+  acts.style.display = 'none'; rep.innerHTML = ''; pal.innerHTML = '';
+  if (!file.type.startsWith('image/')){ stat.textContent = 'ไฟล์นี้ไม่ใช่รูปภาพ'; return; }
+  stat.textContent = 'กำลังวิเคราะห์…';
+  try {
+    const src = await new Promise((res, rej) => {
+      const r = new FileReader();
+      r.onload = () => res(r.result); r.onerror = rej;
+      r.readAsDataURL(file);
+    });
+    const img = new Image();
+    img.src = src;
+    await img.decode();
+
+    const s = sample(img);
+    const bgInfo = background(s);
+    const mk = mask(s, bgInfo.rgb);
+    const raw = bands(s, mk).map(b => describe(s, mk, b))
+      .filter(b => b.h >= 2 || b.wide > 0.15);
+    const { blocks: blks, classes, report } = toBlocks(raw, s, bgInfo, mk);
+
+    seq++;
+    made = {
+      id: 'img' + seq,
+      group: 'ref',
+      name: 'จากภาพ · ' + file.name.replace(/\.[^.]+$/, '').slice(0, 24),
+      classes,
+      blocks: blks
+    };
+    madeSrc = src;
+    madeRatio = nearestRatio(img);
+
+    drawMap(img, s, raw);
+    const bg = bgInfo.rgb.map(Math.round);
+    pal.innerHTML = [hex(...bg), '#6A2DAF', '#1a1a1a'].map(c =>
+      `<i style="background:${c}" title="${c}"></i>`).join('');
+    rep.innerHTML = report.map(t => `<li>${t}</li>`).join('');
+    stat.textContent = `${img.naturalWidth}×${img.naturalHeight} · พื้นหลัง ${hex(...bg)}`
+      + (classes.length ? ` · class: ${classes.join(' ')}` : ' · พื้นขาว')
+      + ` · ${blks.length} บล็อก · สัดส่วนใกล้ ${madeRatio}`;
+    ratioBtn.textContent = madeRatio === RATIO ? 'สัดส่วนตรงแล้ว' : 'ปรับเป็น ' + madeRatio;
+    ratioBtn.disabled = madeRatio === RATIO;
+    acts.style.display = 'flex';
+  } catch (err) {
+    stat.textContent = 'วิเคราะห์ไม่ได้ · ' + err.message;
+  }
+}
+
+/* the analysed image goes straight into the slot it produced, so the layout can
+   be judged against the original rather than against empty grey boxes */
+function seed(slot){
+  const slide = slot.querySelector('.slide');
+  slide.querySelectorAll('.photo, .mockup').forEach(t => {
+    t.style.backgroundImage = `url('${madeSrc}')`;
+    t.style.backgroundSize = 'cover';
+    t.style.backgroundPosition = 'center';
+    t.classList.add('filled');
+  });
+}
+
+panel.querySelector('#anAdd').onclick = () => {
+  if (!made) return;
+  if (!DATA.groups.some(g => g.id === 'ref')) DATA.groups.push({ id:'ref', name:'จากภาพวิเคราะห์' });
+  DATA.templates = DATA.templates.filter(t => t.id !== made.id).concat(made);
+  indexData(); buildPickers(); galBuilt = false;
+  const slot = makeSlot(made.id);
+  work.appendChild(slot);
+  seed(slot);
+  renumber();
+  slot.scrollIntoView({ behavior:'smooth', block:'center' });
+  say(`เพิ่ม ${made.name} เข้าชุดเทมเพลตแล้ว · ดาวน์โหลด templates.json เพื่อเก็บถาวร`);
+};
+
+ratioBtn.onclick = () => {
+  if (!madeRatio) return;
+  applyRatio(madeRatio);
+  document.getElementById('ratioSel').value = madeRatio;
+  ratioBtn.disabled = true;
+  ratioBtn.textContent = 'สัดส่วนตรงแล้ว';
+};
+
+panel.querySelector('#anJson').onclick = () => {
+  if (!made) return;
+  const blob = new Blob([JSON.stringify(made, null, 2)], { type:'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = made.id + '.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+};
+
+})();
+</script>
 </body>
 </html>

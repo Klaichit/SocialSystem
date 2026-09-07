@@ -383,6 +383,37 @@
       ]
     },
     {
+      "id": "h11",
+      "group": "head",
+      "name": "พาดหัวกลางบนภาพสว่าง",
+      "classes": [
+        "has-photo",
+        "photo-light"
+      ],
+      "blocks": [
+        {
+          "type": "photo"
+        },
+        {
+          "type": "head",
+          "text": "หนึ่งระบบ<br>หลายจังหวะของงาน",
+          "style": "text-align:center;font-size:calc(80px * var(--tscale))"
+        },
+        {
+          "type": "body",
+          "text": "ออกแบบพอดี ในแบบที่คุณใช้จริง",
+          "style": "text-align:center;margin-top:24px;font-weight:500"
+        },
+        {
+          "type": "spacer"
+        },
+        {
+          "type": "foot",
+          "right": " "
+        }
+      ]
+    },
+    {
       "id": "p1",
       "group": "prod",
       "name": "สินค้าเต็มเฟรม",

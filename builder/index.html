@@ -153,6 +153,17 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg-soft);color
 .slide.has-photo .foot .ph{color:rgba(255,255,255,.8);border-color:rgba(255,255,255,.5)}
 .slide.has-photo .source,.slide.has-photo .spec-k,.slide.has-photo .specrow .k,.slide.has-photo .col-k,.slide.has-photo .byline{color:rgba(255,255,255,.8)}
 .slide.dark .source,.slide.ink .source{color:rgba(255,255,255,.8)}
+/* light photo: this layout sits dark type on the bright top of a picture
+   rather than white type on the purple wash, so the scrim flips and the
+   has-photo colour overrides go back to ink */
+.slide.has-photo.photo-light{color:var(--ink)}
+.slide.has-photo.photo-light>.photo::before{
+  background:linear-gradient(180deg,rgba(255,255,255,.92) 0%,rgba(255,255,255,.8) 26%,rgba(255,255,255,.34) 44%,rgba(255,255,255,0) 60%)}
+.slide.has-photo.photo-light .body{color:var(--ink-2)}
+.slide.has-photo.photo-light .eyebrow,.slide.has-photo.photo-light .swipe{color:var(--brand)}
+.slide.has-photo.photo-light .date,.slide.has-photo.photo-light .source{color:var(--muted)}
+.slide.has-photo.photo-light .foot img{filter:none}
+.slide.has-photo.photo-light .foot .ph{color:var(--muted);border-color:var(--line)}
 .stat-row{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;flex-shrink:0;margin-top:20px}
 .stat-row .stat{display:block}
 .stat-row .stat-unit{margin-left:0}
@@ -781,6 +792,37 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg-soft);color
         {
           "type": "foot",
           "mt": 44
+        }
+      ]
+    },
+    {
+      "id": "h11",
+      "group": "head",
+      "name": "พาดหัวกลางบนภาพสว่าง",
+      "classes": [
+        "has-photo",
+        "photo-light"
+      ],
+      "blocks": [
+        {
+          "type": "photo"
+        },
+        {
+          "type": "head",
+          "text": "หนึ่งระบบ<br>หลายจังหวะของงาน",
+          "style": "text-align:center;font-size:calc(80px * var(--tscale))"
+        },
+        {
+          "type": "body",
+          "text": "ออกแบบพอดี ในแบบที่คุณใช้จริง",
+          "style": "text-align:center;margin-top:24px;font-weight:500"
+        },
+        {
+          "type": "spacer"
+        },
+        {
+          "type": "foot",
+          "right": " "
         }
       ]
     },

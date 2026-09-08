@@ -22,6 +22,10 @@
   --font-body:'IBM Plex Sans Thai',sans-serif;
   --font-display:'Anton',sans-serif;
   --tscale:1;
+  /* ม่วงทับรูป และวงเรืองแสง เก็บเป็นสตริงเต็ม ไม่ใช่ calc() ใน alpha
+     เพราะ html2canvas อ่าน gradient ที่มี calc ไม่ออก */
+  --veil-grad:linear-gradient(180deg,rgba(26,26,31,.68) 0%,rgba(77,31,128,.92) 78%);
+  --halo-grad:radial-gradient(circle,rgba(139,77,214,.42) 0%,rgba(139,77,214,0) 68%);
   --sym-yes:'✓'; --sym-no:'✕'; --sym-quote:'\201C'; --sym-q:'?';
   --chk-counter:decimal-leading-zero; --dot-counter:decimal;
 }
@@ -62,6 +66,9 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg-soft);color
   font-family:var(--mono);font-size:10px;cursor:pointer;color:var(--ink-2)}
 .slot-bar button:hover{border-color:var(--brand);color:var(--brand)}
 .slot-bar button.on{background:var(--brand);border-color:var(--brand);color:#fff}
+.slot-bar .veil{display:flex;align-items:center;gap:4px}
+.slot-bar .veil input{width:66px;accent-color:var(--brand);margin:0}
+.slot-bar .veil.own b{color:var(--brand)}
 .slot.erase .stage{cursor:crosshair;box-shadow:0 0 0 2px #c62828,0 4px 16px rgba(0,0,0,.06)}
 .slot.erase .slide *{user-select:none}
 .slot.erase .slide [contenteditable]{caret-color:transparent}
@@ -147,8 +154,7 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg-soft);color
 .stage.warn{box-shadow:0 0 0 3px #ef4444,0 12px 40px rgba(239,68,68,.22)}
 
 .photo{position:absolute;inset:0;background-size:cover;background-position:center 30%}
-.photo::before{content:'';position:absolute;inset:0;
-  background:linear-gradient(180deg,rgba(26,26,31,.68) 0%,rgba(77,31,128,.92) 78%)}
+.photo::before{content:'';position:absolute;inset:0;background:var(--veil-grad)}
 .slide.has-photo{color:#fff}
 .slide.has-photo>*:not(.photo):not(.halo):not(.tagover){position:relative;z-index:2}
 .slide.has-photo>.photo{z-index:0;pointer-events:none}
@@ -251,7 +257,7 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg-soft);color
 .specrow .v{font-family:var(--mono);font-size:calc(38px * var(--tscale));font-weight:700}
 .slide.dark .specrow .k,.slide.ink .specrow .k{color:rgba(255,255,255,.7)}
 .halo{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);
-  width:820px;height:820px;border-radius:50%;background:radial-gradient(circle,rgba(139,77,214,.42) 0%,rgba(139,77,214,0) 68%)}
+  width:820px;height:820px;border-radius:50%;background:var(--halo-grad)}
 .sideby{display:flex;gap:36px;flex:1;min-height:0}
 .sideby>div{flex:1;display:flex;flex-direction:column;gap:20px;min-height:0}
 .grid4{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:26px;flex:1;min-height:0}
@@ -345,6 +351,14 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg-soft);color
       <label>ขนาดตัวอักษรรวม <span id="scaleVal">100%</span></label>
       <input type="range" id="tscale" min="80" max="120" step="2" value="100" style="width:100%">
       <button class="btn ghost" id="fontReset">คืนค่าแบรนด์</button>
+    </section>
+
+    <section>
+      <label>ม่วงทับรูปพื้นหลัง <span id="veilVal">100%</span></label>
+      <input type="range" id="veilRange" min="0" max="150" step="5" value="100" style="width:100%">
+      <label>วงเรืองแสง (halo) <span id="haloVal">100%</span></label>
+      <input type="range" id="haloRange" min="0" max="150" step="5" value="100" style="width:100%">
+      <div class="hint">0% = เห็นรูปเต็ม ๆ · 150% = ม่วงทึบสุด · ปรับรายสไลด์ได้ที่สไลเดอร์ในแถบของแต่ละใบ (ดับเบิลคลิกเพื่อกลับมาใช้ค่ารวม)</div>
     </section>
 
     <section>
@@ -2564,10 +2578,12 @@ function makeSlot(id){
       <button data-act="erase" title="เปิดโหมดลบชิ้นส่วน แล้วคลิกชิ้นที่ไม่เอา (กด Shift ค้างเพื่อลบทั้งกลุ่ม)">ลบชิ้นส่วน</button><button data-act="unerase" title="คืนชิ้นส่วนที่เพิ่งลบ">คืนชิ้นส่วน</button>
       <button data-act="png">PNG</button>
       <button data-act="background">เพิ่มรูปพื้นหลัง</button><button data-act="background-clear">ลบรูปพื้นหลัง</button>
+      <label class="veil" title="ความเข้มม่วงทับรูปของสไลด์ใบนี้ · ดับเบิลคลิกเพื่อกลับไปใช้ค่ารวม"><b>ม่วง</b><input type="range" min="0" max="150" step="5" value="100" data-veil></label>
       <input type="file" class="background-input" accept="image/*" aria-label="เลือกรูปพื้นหลัง" hidden>
     </div>
     <div class="stage"><div class="scaler">${renderTemplate(t)}</div></div>`;
   if (logoSrc) slot.querySelectorAll('.logo').forEach(l => l.innerHTML = `<img src="${logoSrc}">`);
+  slot.querySelector('[data-veil]').value = veilPct;
   enableDrop(slot.querySelector('.slide'));
   return slot;
 }
@@ -2853,6 +2869,46 @@ const pickFont = (id, varName) => document.getElementById(id).onchange = e => {
 pickFont('fontHead', '--font-head');
 pickFont('fontBody', '--font-body');
 pickFont('fontMono', '--mono');
+
+/* ===== ความเข้มของ gradient ม่วง =====
+   ค่ารวมเขียนที่ :root ส่วนค่ารายสไลด์เขียนทับเป็น inline var บน .slide ใบนั้น
+   สไลด์ที่ไม่ได้ตั้งเองจึงไหลตามค่ารวมโดยอัตโนมัติ */
+const VEIL_BASE = [.68, .92], HALO_BASE = .42;
+let veilPct = 100, haloPct = 100;
+const alphaOf = (base, pct) => Math.min(1, base * pct / 100).toFixed(3);
+const veilGrad = pct => `linear-gradient(180deg,rgba(26,26,31,${alphaOf(VEIL_BASE[0],pct)}) 0%,rgba(77,31,128,${alphaOf(VEIL_BASE[1],pct)}) 78%)`;
+const haloGrad = pct => `radial-gradient(circle,rgba(139,77,214,${alphaOf(HALO_BASE,pct)}) 0%,rgba(139,77,214,0) 68%)`;
+
+function applyVeil(pct){
+  veilPct = pct;
+  rootStyle.setProperty('--veil-grad', veilGrad(pct));
+  document.getElementById('veilVal').textContent = pct + '%';
+  work.querySelectorAll('.slot:not([data-veil]) [data-veil]').forEach(r => r.value = pct);
+}
+function applyHalo(pct){
+  haloPct = pct;
+  rootStyle.setProperty('--halo-grad', haloGrad(pct));
+  document.getElementById('haloVal').textContent = pct + '%';
+}
+function setSlotVeil(slot, pct){
+  slot.dataset.veil = pct;
+  slot.querySelector('.slide').style.setProperty('--veil-grad', veilGrad(pct));
+  slot.querySelector('.veil')?.classList.add('own');
+}
+function clearSlotVeil(slot){
+  delete slot.dataset.veil;
+  slot.querySelector('.slide').style.removeProperty('--veil-grad');
+  slot.querySelector('.veil')?.classList.remove('own');
+  const r = slot.querySelector('[data-veil]'); if (r) r.value = veilPct;
+}
+document.getElementById('veilRange').oninput = e => applyVeil(Number(e.target.value));
+document.getElementById('haloRange').oninput = e => applyHalo(Number(e.target.value));
+work.addEventListener('input', e => {
+  if (e.target.matches('[data-veil]')) setSlotVeil(e.target.closest('.slot'), Number(e.target.value));
+});
+work.addEventListener('dblclick', e => {
+  if (e.target.matches('[data-veil]')) clearSlotVeil(e.target.closest('.slot'));
+});
 
 /* ===== symbol sets ===== */
 const SYMS = {

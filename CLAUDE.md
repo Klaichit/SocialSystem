@@ -120,6 +120,12 @@ vault/                  Obsidian vault สำหรับร่างเนื�
 `--tscale` คูณเข้าไปใน `font-size:calc(Npx * var(--tscale))` ทั้ง 39 จุด
 **บล็อกใหม่ทุกตัวต้องใช้ calc นี้ด้วย** ไม่งั้นสไลเดอร์ขนาดจะข้ามบล็อกนั้น
 
+**gradient ม่วง** — `--veil-grad` (ม่วงทับรูปพื้นหลังใน `.photo::before`) `--halo-grad` (วงเรืองแสง)
+เก็บเป็นสตริง gradient เต็ม ๆ ไม่ใช่ `calc()` ใน alpha เพราะ html2canvas อ่าน gradient ที่มี calc ไม่ออก
+JS ประกอบสตริงใหม่ทุกครั้งที่เลื่อนสไลเดอร์ (`veilGrad()` / `haloGrad()` alpha ตัน 1)
+ค่ารวมเขียนที่ `:root` ค่ารายสไลด์เขียนทับเป็น inline var บน `.slide` ใบนั้น (`slot.dataset.veil`)
+สไลด์ที่ไม่ได้ตั้งเองจึงไหลตามค่ารวมอัตโนมัติ ดับเบิลคลิกสไลเดอร์ในแถบสไลด์ = ล้าง override
+
 **สัญลักษณ์** — `--sym-yes` `--sym-no` `--sym-quote` `--sym-q` `--chk-counter` `--dot-counter`
 สัญลักษณ์ทั้งหมดวาดผ่าน `::before { content: var(--sym-*) }` และ CSS counter
 ทำแบบนี้เพราะสลับชุดสัญลักษณ์ได้สดโดยไม่ต้อง re-render (ข้อความที่ผู้ใช้พิมพ์จะไม่หาย)
@@ -135,6 +141,7 @@ vault/                  Obsidian vault สำหรับร่างเนื�
 | `checkFit(slot)` / `checkAll()` / `checkSoon()` | ตรวจข้อความล้นและทับกัน |
 | `applyRatio(key)` | เปลี่ยนสัดส่วนทั้งระบบ |
 | `applySyms(key)` | สลับชุดสัญลักษณ์ |
+| `applyVeil(pct)` / `applyHalo(pct)` / `setSlotVeil()` / `clearSlotVeil()` | ความเข้ม gradient ม่วง |
 | `ensureFont(name)` | lazy-load Google Font |
 | `shoot(slot, n)` | export PNG ใบเดียว |
 | `indexData()` / `buildPickers()` / `buildGal()` | สร้าง index และ UI จาก DATA |
@@ -196,6 +203,7 @@ file picker ของ `.mockup` และ drop zone ของสไลด์ แ
 ## กฎที่ต้องรักษา
 
 1. **ไม่แตะสีแบรนด์** ม่วง `#6A2DAF` กับชุดสีที่เหลือล็อกมาจากเว็บบริษัท ต้องตรงกัน
+   (ปรับได้แค่ความโปร่งของ gradient ทับรูป ตัวสีไม่เปลี่ยน)
 2. **โทน B2B-industrial** ไม่ใช่ lifestyle ตัวเลขและสเปกใช้ mono เสมอ นั่นคือสิ่งที่ทำให้
    ดู technical ไม่ใช่เพจขายของทั่วไป
 3. **ไม่เพิ่ม build step** ต้องเปิดไฟล์จากเครื่องแล้วใช้ได้ทันที

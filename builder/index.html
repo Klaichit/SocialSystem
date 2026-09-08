@@ -61,6 +61,11 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg-soft);color
 .slot-bar button{background:#fff;border:1px solid var(--line);border-radius:6px;padding:3px 8px;
   font-family:var(--mono);font-size:10px;cursor:pointer;color:var(--ink-2)}
 .slot-bar button:hover{border-color:var(--brand);color:var(--brand)}
+.slot-bar button.on{background:var(--brand);border-color:var(--brand);color:#fff}
+.slot.erase .stage{cursor:crosshair;box-shadow:0 0 0 2px #c62828,0 4px 16px rgba(0,0,0,.06)}
+.slot.erase .slide *{user-select:none}
+.slot.erase .slide [contenteditable]{caret-color:transparent}
+.slot.erase .erase-hit{outline:6px solid #c62828 !important;outline-offset:3px;background:rgba(198,40,40,.12)}
 .stage{width:360px;height:var(--stage-h);overflow:hidden;border-radius:var(--radius);
   box-shadow:0 4px 16px rgba(0,0,0,.06),0 12px 40px rgba(0,0,0,.08)}
 .scaler{transform:scale(.3333);transform-origin:top left}
@@ -396,7 +401,7 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg-soft);color
   <button class="sw" data-t="c-ink" style="background:#1a1a1a"></button>
   <button class="sw" data-t="c-white" style="background:#fff"></button>
   <button class="sw" data-t="c-mute" style="background:#8a8a8a"></button>
-  <b></b><button data-t="clear">ล้าง</button>
+  <b></b><button data-t="clear">ล้าง</button><button data-t="del">ลบชิ้นนี้</button>
 </div>
 
 <script type="application/json" id="tplData">
@@ -2555,7 +2560,8 @@ function makeSlot(id){
     <div class="slot-bar">
       <span class="num"></span><span class="tag">${t.name}</span><span class="fit">พอดี</span>
       <button data-act="up">↑</button><button data-act="down">↓</button>
-      <button data-act="dup">คัดลอก</button><button data-act="del">ลบ</button>
+      <button data-act="dup">คัดลอก</button><button data-act="del">ลบสไลด์</button>
+      <button data-act="erase" title="เปิดโหมดลบชิ้นส่วน แล้วคลิกชิ้นที่ไม่เอา (กด Shift ค้างเพื่อลบทั้งกลุ่ม)">ลบชิ้นส่วน</button><button data-act="unerase" title="คืนชิ้นส่วนที่เพิ่งลบ">คืนชิ้นส่วน</button>
       <button data-act="png">PNG</button>
       <button data-act="background">เพิ่มรูปพื้นหลัง</button><button data-act="background-clear">ลบรูปพื้นหลัง</button>
       <input type="file" class="background-input" accept="image/*" aria-label="เลือกรูปพื้นหลัง" hidden>
@@ -2661,6 +2667,10 @@ function enableDrop(slide){
     r.readAsDataURL(f);
   };
   slide.querySelectorAll('.photo, .mockup').forEach(target => {
+    /* Restoring an erased block re-runs enableDrop on the whole slide, so each
+       target remembers whether it is already wired and skips a second bind. */
+    if (target._dropBound) return;
+    target._dropBound = 1;
     if (target.matches('.mockup')) {
       target.tabIndex = 0;
       target.setAttribute('role', 'button');
@@ -2687,11 +2697,14 @@ function enableDrop(slide){
      layer grow one on first drop and switch into the has-photo treatment.
      The handlers above stop propagation, so a drop on a mockup still fills
      that mockup rather than the background. */
-  slide.addEventListener('dragover', e => e.preventDefault());
-  slide.addEventListener('drop', e => {
-    e.preventDefault();
-    setSlideBackground(slide, e.dataTransfer.files[0]);
-  });
+  if (!slide._dropBound){
+    slide._dropBound = 1;
+    slide.addEventListener('dragover', e => e.preventDefault());
+    slide.addEventListener('drop', e => {
+      e.preventDefault();
+      setSlideBackground(slide, e.dataTransfer.files[0]);
+    });
+  }
 }
 
 function renumber(){
@@ -2920,6 +2933,10 @@ tbar.onclick = e => {
   if (t === 'c-white') target.style.color = '#fff';
   if (t === 'c-mute')  target.style.color = 'var(--muted)';
   if (t === 'clear'){ ['fontSize','fontWeight','textAlign','color'].forEach(k => target.style[k] = ''); }
+  if (t === 'del'){
+    const slot = target.closest('.slot'), hit = eraseTarget(target, false);
+    if (slot && hit){ eraseNode(slot, hit); tbar.classList.remove('on'); target = null; }
+  }
   checkSoon();
 };
 
@@ -2985,8 +3002,77 @@ work.onclick = e => {
   if (act === 'down' && slot.nextElementSibling) work.insertBefore(slot.nextElementSibling, slot);
   if (act === 'dup'){ const c = slot.cloneNode(true); enableDrop(c.querySelector('.slide')); slot.after(c); }
   if (act === 'png') shoot(slot, [...work.children].indexOf(slot) + 1);
+  if (act === 'erase'){
+    const on = slot.classList.toggle('erase');
+    b.classList.toggle('on', on);
+    if (!on) setHl(null);
+  }
+  if (act === 'unerase') undoErase(slot);
   renumber();
 };
+
+/* ===== erase mode: delete single blocks inside a slide =====
+   Deleting is DOM-only: templates.json is untouched, so re-adding the slide
+   brings the block back. Each slot keeps its own undo stack. */
+const ERASABLE = ['.slide > *', '.stat-row', '.specs > div', '.specrow', '.dot', '.chk', '.tf',
+  '.cols > .col', '.grid4 > .mockup', '.sideby > div', '.halfsplit > .half',
+  '.half > *', '.lr', '.lr .txt > *', '.sideby > div > *', '.band > *'].join(',');
+
+function eraseTarget(el, wide){
+  const slide = el.closest('.slide'); if (!slide) return null;
+  let hit = el.closest(ERASABLE);
+  if (!hit || !slide.contains(hit)) return null;
+  if (wide){
+    const up = hit.parentElement && hit.parentElement.closest(ERASABLE);
+    if (up && slide.contains(up)) hit = up;
+  }
+  return hit;
+}
+
+function eraseNode(slot, hit){
+  (slot._erased = slot._erased || []).push({node: hit, parent: hit.parentElement, next: hit.nextElementSibling});
+  hit.remove();
+  checkSoon();
+}
+
+function undoErase(slot){
+  const stack = slot._erased;
+  if (!stack || !stack.length) return;
+  const { node, parent, next } = stack.pop();
+  if (!parent || !parent.isConnected) return;
+  parent.insertBefore(node, next && next.parentElement === parent ? next : null);
+  enableDrop(slot.querySelector('.slide'));
+  if (logoSrc) node.querySelectorAll('.logo').forEach(l => l.innerHTML = `<img src="${logoSrc}">`);
+  checkSoon();
+}
+
+let hl = null;
+function setHl(el){
+  if (hl === el) return;
+  if (hl) hl.classList.remove('erase-hit');
+  hl = el;
+  if (hl) hl.classList.add('erase-hit');
+}
+
+work.addEventListener('mousemove', e => {
+  const slot = e.target.closest('.slot.erase');
+  setHl(slot && !e.target.closest('.slot-bar') ? eraseTarget(e.target, e.shiftKey) : null);
+});
+work.addEventListener('mouseleave', () => setHl(null));
+/* Capture phase: the caret, the mockup file picker and the slide drop zone all
+   sit on the same elements, so the erase click has to win before they run. */
+work.addEventListener('mousedown', e => {
+  if (e.target.closest('.slot.erase') && !e.target.closest('.slot-bar')) e.preventDefault();
+}, true);
+work.addEventListener('click', e => {
+  const slot = e.target.closest('.slot.erase');
+  if (!slot || e.target.closest('.slot-bar')) return;
+  e.preventDefault(); e.stopPropagation();
+  const hit = eraseTarget(e.target, e.shiftKey);
+  if (!hit) return;
+  setHl(null);
+  eraseNode(slot, hit);
+}, true);
 
 async function shoot(slot, n){
   const scaler = slot.querySelector('.scaler'), stage = slot.querySelector('.stage');

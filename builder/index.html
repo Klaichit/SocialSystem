@@ -22,6 +22,10 @@
   --font-body:'IBM Plex Sans Thai',sans-serif;
   --font-display:'Anton',sans-serif;
   --tscale:1;
+  /* ม่วงทับรูป และวงเรืองแสง เก็บเป็นสตริงเต็ม ไม่ใช่ calc() ใน alpha
+     เพราะ html2canvas อ่าน gradient ที่มี calc ไม่ออก */
+  --veil-grad:linear-gradient(180deg,rgba(26,26,31,.68) 0%,rgba(77,31,128,.92) 78%);
+  --halo-grad:radial-gradient(circle,rgba(139,77,214,.42) 0%,rgba(139,77,214,0) 68%);
   --sym-yes:'✓'; --sym-no:'✕'; --sym-quote:'\201C'; --sym-q:'?';
   --chk-counter:decimal-leading-zero; --dot-counter:decimal;
 }
@@ -61,6 +65,14 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg-soft);color
 .slot-bar button{background:#fff;border:1px solid var(--line);border-radius:6px;padding:3px 8px;
   font-family:var(--mono);font-size:10px;cursor:pointer;color:var(--ink-2)}
 .slot-bar button:hover{border-color:var(--brand);color:var(--brand)}
+.slot-bar button.on{background:var(--brand);border-color:var(--brand);color:#fff}
+.slot-bar .veil{display:flex;align-items:center;gap:4px}
+.slot-bar .veil input{width:66px;accent-color:var(--brand);margin:0}
+.slot-bar .veil.own b{color:var(--brand)}
+.slot.erase .stage{cursor:crosshair;box-shadow:0 0 0 2px #c62828,0 4px 16px rgba(0,0,0,.06)}
+.slot.erase .slide *{user-select:none}
+.slot.erase .slide [contenteditable]{caret-color:transparent}
+.slot.erase .erase-hit{outline:6px solid #c62828 !important;outline-offset:3px;background:rgba(198,40,40,.12)}
 .stage{width:360px;height:var(--stage-h);overflow:hidden;border-radius:var(--radius);
   box-shadow:0 4px 16px rgba(0,0,0,.06),0 12px 40px rgba(0,0,0,.08)}
 .scaler{transform:scale(.3333);transform-origin:top left}
@@ -142,8 +154,7 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg-soft);color
 .stage.warn{box-shadow:0 0 0 3px #ef4444,0 12px 40px rgba(239,68,68,.22)}
 
 .photo{position:absolute;inset:0;background-size:cover;background-position:center 30%}
-.photo::before{content:'';position:absolute;inset:0;
-  background:linear-gradient(180deg,rgba(26,26,31,.68) 0%,rgba(77,31,128,.92) 78%)}
+.photo::before{content:'';position:absolute;inset:0;background:var(--veil-grad)}
 .slide.has-photo{color:#fff}
 .slide.has-photo>*:not(.photo):not(.halo):not(.tagover){position:relative;z-index:2}
 .slide.has-photo>.photo{z-index:0;pointer-events:none}
@@ -246,7 +257,7 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg-soft);color
 .specrow .v{font-family:var(--mono);font-size:calc(38px * var(--tscale));font-weight:700}
 .slide.dark .specrow .k,.slide.ink .specrow .k{color:rgba(255,255,255,.7)}
 .halo{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);
-  width:820px;height:820px;border-radius:50%;background:radial-gradient(circle,rgba(139,77,214,.42) 0%,rgba(139,77,214,0) 68%)}
+  width:820px;height:820px;border-radius:50%;background:var(--halo-grad)}
 .sideby{display:flex;gap:36px;flex:1;min-height:0}
 .sideby>div{flex:1;display:flex;flex-direction:column;gap:20px;min-height:0}
 .grid4{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:26px;flex:1;min-height:0}
@@ -343,6 +354,14 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg-soft);color
     </section>
 
     <section>
+      <label>ม่วงทับรูปพื้นหลัง <span id="veilVal">100%</span></label>
+      <input type="range" id="veilRange" min="0" max="150" step="5" value="100" style="width:100%">
+      <label>วงเรืองแสง (halo) <span id="haloVal">100%</span></label>
+      <input type="range" id="haloRange" min="0" max="150" step="5" value="100" style="width:100%">
+      <div class="hint">0% = เห็นรูปเต็ม ๆ · 150% = ม่วงทึบสุด · ปรับรายสไลด์ได้ที่สไลเดอร์ในแถบของแต่ละใบ (ดับเบิลคลิกเพื่อกลับมาใช้ค่ารวม)</div>
+    </section>
+
+    <section>
       <label>สัดส่วนภาพ</label>
       <select id="ratioSel">
         <option value="4:5" selected>4:5 · 1080×1350 — ฟีด FB / IG</option>
@@ -396,7 +415,7 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg-soft);color
   <button class="sw" data-t="c-ink" style="background:#1a1a1a"></button>
   <button class="sw" data-t="c-white" style="background:#fff"></button>
   <button class="sw" data-t="c-mute" style="background:#8a8a8a"></button>
-  <b></b><button data-t="clear">ล้าง</button>
+  <b></b><button data-t="clear">ล้าง</button><button data-t="del">ลบชิ้นนี้</button>
 </div>
 
 <script type="application/json" id="tplData">
@@ -2555,13 +2574,16 @@ function makeSlot(id){
     <div class="slot-bar">
       <span class="num"></span><span class="tag">${t.name}</span><span class="fit">พอดี</span>
       <button data-act="up">↑</button><button data-act="down">↓</button>
-      <button data-act="dup">คัดลอก</button><button data-act="del">ลบ</button>
+      <button data-act="dup">คัดลอก</button><button data-act="del">ลบสไลด์</button>
+      <button data-act="erase" title="เปิดโหมดลบชิ้นส่วน แล้วคลิกชิ้นที่ไม่เอา (กด Shift ค้างเพื่อลบทั้งกลุ่ม)">ลบชิ้นส่วน</button><button data-act="unerase" title="คืนชิ้นส่วนที่เพิ่งลบ">คืนชิ้นส่วน</button>
       <button data-act="png">PNG</button>
       <button data-act="background">เพิ่มรูปพื้นหลัง</button><button data-act="background-clear">ลบรูปพื้นหลัง</button>
+      <label class="veil" title="ความเข้มม่วงทับรูปของสไลด์ใบนี้ · ดับเบิลคลิกเพื่อกลับไปใช้ค่ารวม"><b>ม่วง</b><input type="range" min="0" max="150" step="5" value="100" data-veil></label>
       <input type="file" class="background-input" accept="image/*" aria-label="เลือกรูปพื้นหลัง" hidden>
     </div>
     <div class="stage"><div class="scaler">${renderTemplate(t)}</div></div>`;
   if (logoSrc) slot.querySelectorAll('.logo').forEach(l => l.innerHTML = `<img src="${logoSrc}">`);
+  slot.querySelector('[data-veil]').value = veilPct;
   enableDrop(slot.querySelector('.slide'));
   return slot;
 }
@@ -2661,6 +2683,10 @@ function enableDrop(slide){
     r.readAsDataURL(f);
   };
   slide.querySelectorAll('.photo, .mockup').forEach(target => {
+    /* Restoring an erased block re-runs enableDrop on the whole slide, so each
+       target remembers whether it is already wired and skips a second bind. */
+    if (target._dropBound) return;
+    target._dropBound = 1;
     if (target.matches('.mockup')) {
       target.tabIndex = 0;
       target.setAttribute('role', 'button');
@@ -2687,11 +2713,14 @@ function enableDrop(slide){
      layer grow one on first drop and switch into the has-photo treatment.
      The handlers above stop propagation, so a drop on a mockup still fills
      that mockup rather than the background. */
-  slide.addEventListener('dragover', e => e.preventDefault());
-  slide.addEventListener('drop', e => {
-    e.preventDefault();
-    setSlideBackground(slide, e.dataTransfer.files[0]);
-  });
+  if (!slide._dropBound){
+    slide._dropBound = 1;
+    slide.addEventListener('dragover', e => e.preventDefault());
+    slide.addEventListener('drop', e => {
+      e.preventDefault();
+      setSlideBackground(slide, e.dataTransfer.files[0]);
+    });
+  }
 }
 
 function renumber(){
@@ -2841,6 +2870,46 @@ pickFont('fontHead', '--font-head');
 pickFont('fontBody', '--font-body');
 pickFont('fontMono', '--mono');
 
+/* ===== ความเข้มของ gradient ม่วง =====
+   ค่ารวมเขียนที่ :root ส่วนค่ารายสไลด์เขียนทับเป็น inline var บน .slide ใบนั้น
+   สไลด์ที่ไม่ได้ตั้งเองจึงไหลตามค่ารวมโดยอัตโนมัติ */
+const VEIL_BASE = [.68, .92], HALO_BASE = .42;
+let veilPct = 100, haloPct = 100;
+const alphaOf = (base, pct) => Math.min(1, base * pct / 100).toFixed(3);
+const veilGrad = pct => `linear-gradient(180deg,rgba(26,26,31,${alphaOf(VEIL_BASE[0],pct)}) 0%,rgba(77,31,128,${alphaOf(VEIL_BASE[1],pct)}) 78%)`;
+const haloGrad = pct => `radial-gradient(circle,rgba(139,77,214,${alphaOf(HALO_BASE,pct)}) 0%,rgba(139,77,214,0) 68%)`;
+
+function applyVeil(pct){
+  veilPct = pct;
+  rootStyle.setProperty('--veil-grad', veilGrad(pct));
+  document.getElementById('veilVal').textContent = pct + '%';
+  work.querySelectorAll('.slot:not([data-veil]) [data-veil]').forEach(r => r.value = pct);
+}
+function applyHalo(pct){
+  haloPct = pct;
+  rootStyle.setProperty('--halo-grad', haloGrad(pct));
+  document.getElementById('haloVal').textContent = pct + '%';
+}
+function setSlotVeil(slot, pct){
+  slot.dataset.veil = pct;
+  slot.querySelector('.slide').style.setProperty('--veil-grad', veilGrad(pct));
+  slot.querySelector('.veil')?.classList.add('own');
+}
+function clearSlotVeil(slot){
+  delete slot.dataset.veil;
+  slot.querySelector('.slide').style.removeProperty('--veil-grad');
+  slot.querySelector('.veil')?.classList.remove('own');
+  const r = slot.querySelector('[data-veil]'); if (r) r.value = veilPct;
+}
+document.getElementById('veilRange').oninput = e => applyVeil(Number(e.target.value));
+document.getElementById('haloRange').oninput = e => applyHalo(Number(e.target.value));
+work.addEventListener('input', e => {
+  if (e.target.matches('[data-veil]')) setSlotVeil(e.target.closest('.slot'), Number(e.target.value));
+});
+work.addEventListener('dblclick', e => {
+  if (e.target.matches('[data-veil]')) clearSlotVeil(e.target.closest('.slot'));
+});
+
 /* ===== symbol sets ===== */
 const SYMS = {
   classic: ['มาตรฐาน · ✓ ✕ · 01 02', { yes:'✓', no:'✕', quote:'\u201C', q:'?',
@@ -2920,6 +2989,10 @@ tbar.onclick = e => {
   if (t === 'c-white') target.style.color = '#fff';
   if (t === 'c-mute')  target.style.color = 'var(--muted)';
   if (t === 'clear'){ ['fontSize','fontWeight','textAlign','color'].forEach(k => target.style[k] = ''); }
+  if (t === 'del'){
+    const slot = target.closest('.slot'), hit = eraseTarget(target, false);
+    if (slot && hit){ eraseNode(slot, hit); tbar.classList.remove('on'); target = null; }
+  }
   checkSoon();
 };
 
@@ -2980,13 +3053,84 @@ work.onclick = e => {
   const slot = b.closest('.slot'), act = b.dataset.act;
   if (act === 'background') slot.querySelector('.background-input').click();
   if (act === 'background-clear') clearSlideBackground(slot.querySelector('.slide'));
-  if (act === 'del') slot.remove();
+  if (act === 'del'){ slot.remove(); window.refreshCopyFields?.(); }
   if (act === 'up' && slot.previousElementSibling) work.insertBefore(slot, slot.previousElementSibling);
   if (act === 'down' && slot.nextElementSibling) work.insertBefore(slot.nextElementSibling, slot);
   if (act === 'dup'){ const c = slot.cloneNode(true); enableDrop(c.querySelector('.slide')); slot.after(c); }
   if (act === 'png') shoot(slot, [...work.children].indexOf(slot) + 1);
+  if (act === 'erase'){
+    const on = slot.classList.toggle('erase');
+    b.classList.toggle('on', on);
+    if (!on) setHl(null);
+  }
+  if (act === 'unerase') undoErase(slot);
   renumber();
 };
+
+/* ===== erase mode: delete single blocks inside a slide =====
+   Deleting is DOM-only: templates.json is untouched, so re-adding the slide
+   brings the block back. Each slot keeps its own undo stack. */
+const ERASABLE = ['.slide > *', '.stat-row', '.specs > div', '.specrow', '.dot', '.chk', '.tf',
+  '.cols > .col', '.grid4 > .mockup', '.sideby > div', '.halfsplit > .half',
+  '.half > *', '.lr', '.lr .txt > *', '.sideby > div > *', '.band > *'].join(',');
+
+function eraseTarget(el, wide){
+  const slide = el.closest('.slide'); if (!slide) return null;
+  let hit = el.closest(ERASABLE);
+  if (!hit || !slide.contains(hit)) return null;
+  if (wide){
+    const up = hit.parentElement && hit.parentElement.closest(ERASABLE);
+    if (up && slide.contains(up)) hit = up;
+  }
+  return hit;
+}
+
+function eraseNode(slot, hit){
+  (slot._erased = slot._erased || []).push({node: hit, parent: hit.parentElement, next: hit.nextElementSibling});
+  hit.remove();
+  window.refreshCopyFields?.();
+  checkSoon();
+}
+
+function undoErase(slot){
+  const stack = slot._erased;
+  if (!stack || !stack.length) return;
+  const { node, parent, next } = stack.pop();
+  if (!parent || !parent.isConnected) return;
+  parent.insertBefore(node, next && next.parentElement === parent ? next : null);
+  enableDrop(slot.querySelector('.slide'));
+  if (logoSrc) node.querySelectorAll('.logo').forEach(l => l.innerHTML = `<img src="${logoSrc}">`);
+  window.refreshCopyFields?.();
+  checkSoon();
+}
+
+let hl = null;
+function setHl(el){
+  if (hl === el) return;
+  if (hl) hl.classList.remove('erase-hit');
+  hl = el;
+  if (hl) hl.classList.add('erase-hit');
+}
+
+work.addEventListener('mousemove', e => {
+  const slot = e.target.closest('.slot.erase');
+  setHl(slot && !e.target.closest('.slot-bar') ? eraseTarget(e.target, e.shiftKey) : null);
+});
+work.addEventListener('mouseleave', () => setHl(null));
+/* Capture phase: the caret, the mockup file picker and the slide drop zone all
+   sit on the same elements, so the erase click has to win before they run. */
+work.addEventListener('mousedown', e => {
+  if (e.target.closest('.slot.erase') && !e.target.closest('.slot-bar')) e.preventDefault();
+}, true);
+work.addEventListener('click', e => {
+  const slot = e.target.closest('.slot.erase');
+  if (!slot || e.target.closest('.slot-bar')) return;
+  e.preventDefault(); e.stopPropagation();
+  const hit = eraseTarget(e.target, e.shiftKey);
+  if (!hit) return;
+  setHl(null);
+  eraseNode(slot, hit);
+}, true);
 
 async function shoot(slot, n){
   const scaler = slot.querySelector('.scaler'), stage = slot.querySelector('.stage');
@@ -3021,7 +3165,9 @@ renumber();
 
 </script>
 <script>
-/* Text editor: writes plain text into the selected slide without rerendering images. */
+/* Text editor: the field list is built from the selected slide, so a template
+   with three text blocks shows three boxes and nothing more. Writing a field
+   sets textContent only — images, inline styles and erased blocks stay put. */
 const editor = document.createElement('section');
 editor.id = 'copyEditor';
 editor.innerHTML = `<label>ข้อความและพรีวิว</label>
@@ -3029,54 +3175,135 @@ editor.innerHTML = `<label>ข้อความและพรีวิว</lab
 <label for="copyRaw">วางข้อความต้นฉบับ</label><textarea id="copyRaw" rows="4" placeholder="บรรทัดแรกเป็นหัวข้อ ที่เหลือเป็นรายละเอียด"></textarea>
 <button type="button" class="btn ghost" id="copySplit">แยกข้อความ</button>
 <div class="hint">แยกตามบรรทัด รองรับ ราคา: ติดต่อ: เงื่อนไข: โดยไม่ย่อหรือตัดข้อความ</div>
+<label class="copy-all"><input type="checkbox" id="copyAll" checked> ใช้กับทุกสไลด์ที่มีช่องเดียวกัน</label>
 <div id="copyFields"></div><button type="button" class="btn" id="copyFit">จัดข้อความให้พอดี</button>
 <div id="copyNotice" class="hint" role="status"></div>`;
 document.querySelector('.rail').insertBefore(editor, document.querySelector('.rail section'));
 const editorStyle=document.createElement('style');
-editorStyle.textContent=`#copyEditor textarea{box-sizing:border-box;width:100%;resize:vertical;background:#26262d;color:white;border:1px solid #555;border-radius:8px;padding:9px;font:14px/1.6 'IBM Plex Sans Thai',sans-serif}#copyEditor textarea:disabled{opacity:.45}.slot.copy-selected>.stage{outline:3px solid var(--brand-light);outline-offset:4px}.slide [data-copy-field]{white-space:pre-line;overflow-wrap:anywhere}`;
+editorStyle.textContent=`#copyEditor textarea{box-sizing:border-box;width:100%;resize:vertical;background:#26262d;color:white;border:1px solid #555;border-radius:8px;padding:9px;font:14px/1.6 'IBM Plex Sans Thai',sans-serif}#copyEditor textarea:disabled{opacity:.45}#copyEditor .copy-all{display:flex;align-items:center;gap:6px;margin:10px 0 2px;color:#9a9aa5;font-size:11px;cursor:pointer}#copyEditor .copy-all input{accent-color:var(--brand-light);margin:0}#copyFields .copy-empty{color:#8b8b95;font-size:11px;margin:8px 0}.slot.copy-selected>.stage{outline:3px solid var(--brand-light);outline-offset:4px}.slide [data-copy-field]{white-space:pre-line;overflow-wrap:anywhere}`;
 document.head.append(editorStyle);
-let copySlot=null;
-const fieldDefs=[['head','หัวข้อ','.head,.quote,.bigword'],['body','รายละเอียด','.body'],['price','ราคา / ข้อเสนอ','.price,.stat'],['cta','คำชวนติดต่อ','.foot .swipe'],['terms','เงื่อนไข / ที่มา','.source']];
-const copyFields=document.getElementById('copyFields');
-for(const [key,label] of fieldDefs){const l=document.createElement('label');l.htmlFor='copy-'+key;l.textContent=label;const input=document.createElement('textarea');input.id=l.htmlFor;input.rows=2;input.dataset.field=key;copyFields.append(l,input);}
-function selectCopy(slot){
- if(!slot || !work.contains(slot))return;
- copySlot=slot;work.querySelectorAll('.copy-selected').forEach(s=>s.classList.remove('copy-selected'));slot.classList.add('copy-selected');
- document.getElementById('copyTarget').textContent='กำลังแก้: '+slot.querySelector('.tag').textContent;
- for(const [key,,selector] of fieldDefs){const el=slot.querySelector('.slide').querySelector(selector),input=document.getElementById('copy-'+key);input.disabled=!el;input.value=el?.innerText||'';input.placeholder=el?'':'เทมเพลตนี้ไม่มีช่องนี้';}
- document.getElementById('copyNotice').textContent='พิมพ์แล้วใช้กับทุก Template ทันที';
+
+/* ป้ายกำกับของแต่ละช่อง เรียงจากเฉพาะเจาะจงไปกว้าง ตัวแรกที่ตรงคือตัวที่ใช้ */
+const FIELD_LABELS=[
+ ['.band .head','พาดหัวแถบ'],['.head.xl','หัวข้อใหญ่'],['.head.sm,.head.xs','หัวข้อรอง'],['.head','หัวข้อ'],
+ ['.eyebrow','หัวเรื่องเล็ก'],['.bigword','คำใหญ่ (อังกฤษ)'],['.quote','คำพูด'],['.byline','ผู้พูด'],
+ ['.body','รายละเอียด'],['.pill','ป้ายหมวด'],['.date','วันที่ / แบรนด์'],
+ ['.stat','ตัวเลข'],['.stat-unit','หน่วย'],['.stat-cap','คำอธิบายตัวเลข'],
+ ['.spec-k,.specrow .k','สเปก · ชื่อ'],['.spec-v,.specrow .v','สเปก · ค่า'],
+ ['.price-k','ป้ายราคา'],['.price','ราคา'],
+ ['.dot-t','จุดเด่น'],['.chk span','เช็คลิสต์'],['.tf-txt','ข้อเทียบ'],
+ ['.col-k','คอลัมน์ · หัว'],['.col-v','คอลัมน์ · เนื้อ'],
+ ['.idx','เลขนำ'],['.half-k','ป้ายครึ่ง'],['.source','ที่มา / เงื่อนไข'],['.tagover','ข้อความจาง'],['.swipe','ข้อความท้าย']
+];
+function labelFor(el){ for(const [sel,label] of FIELD_LABELS) if(el.matches(sel)) return label; return 'ข้อความ'; }
+
+/* อ่านช่องข้อความจริงในสไลด์ ตามลำดับที่เห็นบนสไลด์ ป้ายซ้ำกันจะต่อเลขให้ */
+function fieldsOf(slide){
+ if(!slide) return [];
+ const list=[...slide.querySelectorAll('[contenteditable]')].map(el=>({el,label:labelFor(el)}));
+ const total={};
+ list.forEach(f=>total[f.label]=(total[f.label]||0)+1);
+ const seen={};
+ return list.map(f=>{
+  seen[f.label]=(seen[f.label]||0)+1;
+  const n=seen[f.label];
+  return {...f, name: total[f.label]>1 ? `${f.label} ${n}` : f.label, role: `${f.label}#${n}`};
+ });
 }
+
+let copySlot=null, curFields=[];
+const copyFields=document.getElementById('copyFields');
+const copyAll=document.getElementById('copyAll');
+const copyNotice=document.getElementById('copyNotice');
+
+function selectCopy(slot){
+ if(!slot || !work.contains(slot)) return;
+ copySlot=slot;
+ work.querySelectorAll('.copy-selected').forEach(s=>s.classList.remove('copy-selected'));
+ slot.classList.add('copy-selected');
+ buildCopyFields();
+}
+
+function buildCopyFields(){
+ if(!copySlot || !work.contains(copySlot)){ copySlot=null; curFields=[]; copyFields.innerHTML=''; document.getElementById('copyTarget').textContent='เลือกสไลด์เพื่อแก้ข้อความ'; return; }
+ curFields=fieldsOf(copySlot.querySelector('.slide'));
+ document.getElementById('copyTarget').textContent=`กำลังแก้: ${copySlot.querySelector('.tag').textContent} · ${curFields.length} ช่องข้อความ`;
+ copyFields.innerHTML='';
+ if(!curFields.length){ copyFields.innerHTML='<div class="copy-empty">เทมเพลตนี้ไม่มีช่องข้อความ</div>'; return; }
+ curFields.forEach((f,i)=>{
+  const l=document.createElement('label');
+  l.htmlFor='copy-'+i; l.textContent=f.name;
+  const input=document.createElement('textarea');
+  input.id=l.htmlFor; input.rows=f.el.innerText.length>34?3:1; input.dataset.idx=i;
+  input.value=f.el.innerText;
+  copyFields.append(l,input);
+ });
+}
+/* โหมดลบชิ้นส่วนและ undo เรียกตัวนี้ เพื่อให้รายการช่องตรงกับสไลด์เสมอ */
+window.refreshCopyFields=buildCopyFields;
+
 work.addEventListener('click',e=>{const slot=e.target.closest('.slot');if(slot&&slot!==copySlot)selectCopy(slot);});
-work.addEventListener('input',e=>{if(e.target.closest('.slot')===copySlot&&e.target.closest('[contenteditable]'))selectCopy(copySlot);});
-function writeCopy(key,value){
+/* พิมพ์บนสไลด์ตรง ๆ ให้ช่องซ้ายตามทัน โดยไม่สร้างช่องใหม่ทับโฟกัส */
+work.addEventListener('input',e=>{
+ if(e.target.closest('.slot')!==copySlot)return;
+ const i=curFields.findIndex(f=>f.el===e.target);
+ if(i<0)return;
+ const box=copyFields.querySelector(`[data-idx="${i}"]`);
+ if(box) box.value=e.target.innerText;
+ if(copyAll.checked) spread(curFields[i].role, e.target.innerText);
+});
+
+/* เขียนข้อความชุดเดียวไปยังสไลด์อื่นที่มีช่อง role เดียวกัน ไม่สร้างบล็อกใหม่ */
+function spread(role,value){
  window.sharedCopy ||= {};
- window.sharedCopy[key]=value;
- document.querySelectorAll('.slide').forEach(applySharedCopy);
- checkSoon();return true;
+ window.sharedCopy[role]=value;
+ document.querySelectorAll('.slot').forEach(slot=>{
+  if(slot===copySlot)return;
+  fieldsOf(slot.querySelector('.slide')).forEach(f=>{
+   if(f.role!==role)return;
+   f.el.textContent=value; f.el.dataset.copyField=role;
+  });
+ });
 }
 function applySharedCopy(slide){
- for(const [key,,selector] of fieldDefs){
-  if(!Object.prototype.hasOwnProperty.call(window.sharedCopy||{},key))continue;
-  let el=slide.querySelector(selector);
-  if(!el && window.sharedCopy[key]){
-   el=document.createElement('div');
-   el.className={head:'head sm',body:'body sm',price:'price',cta:'body sm',terms:'source'}[key];
-   el.contentEditable='true';
-   const anchor=key==='head'?slide.querySelector('.mockup,.spacer,.foot'):slide.querySelector('.spacer,.source,.foot');
-   if(anchor) anchor.parentNode.insertBefore(el,anchor); else slide.append(el);
-  }
-  if(el){el.textContent=window.sharedCopy[key];el.dataset.copyField=key;}
- }
+ if(!window.sharedCopy)return;
+ fieldsOf(slide).forEach(f=>{
+  if(!Object.prototype.hasOwnProperty.call(window.sharedCopy,f.role))return;
+  f.el.textContent=window.sharedCopy[f.role]; f.el.dataset.copyField=f.role;
+ });
 }
-copyFields.addEventListener('input',e=>{if(e.target.dataset.field)writeCopy(e.target.dataset.field,e.target.value);});
+
+copyFields.addEventListener('input',e=>{
+ const i=Number(e.target.dataset.idx);
+ const f=curFields[i]; if(!f || !f.el.isConnected)return;
+ f.el.textContent=e.target.value; f.el.dataset.copyField=f.role;
+ if(copyAll.checked) spread(f.role,e.target.value);
+ checkSoon();
+});
+
 document.getElementById('copySplit').onclick=()=>{
  const raw=document.getElementById('copyRaw').value.trim();if(!raw)return;
+ if(!curFields.length){copyNotice.textContent='เทมเพลตนี้ไม่มีช่องข้อความ';return;}
  const parts={head:'',body:[],price:[],cta:[],terms:[]};
  for(const line of raw.split(/\r?\n/)){const match=line.match(/^\s*(ราคา|ติดต่อ|เงื่อนไข)\s*:\s*(.*)$/);if(match)parts[{'ราคา':'price','ติดต่อ':'cta','เงื่อนไข':'terms'}[match[1]]].push(match[2]);else if(!parts.head&&line.trim())parts.head=line;else parts.body.push(line);}
+ /* จับคู่กับช่องที่เทมเพลตนี้มีจริง ช่องไหนไม่มีก็บอกไว้ ไม่ยัดบล็อกเพิ่ม */
+ const slots=[['head','หัวข้อ','.head,.quote,.bigword'],['body','รายละเอียด','.body'],['price','ราคา','.price,.stat'],['cta','คำชวนติดต่อ','.swipe'],['terms','เงื่อนไข / ที่มา','.source']];
  let missing=[];
- for(const [key,label] of fieldDefs){const value=Array.isArray(parts[key])?parts[key].join('\n').trim():parts[key];if(!value)continue;if(writeCopy(key,value))document.getElementById('copy-'+key).value=value;else missing.push(label);}
- document.getElementById('copyNotice').textContent=missing.length?'เทมเพลตไม่มีช่อง '+missing.join(', ')+' — ข้อความต้นฉบับยังอยู่ครบ':'แยกข้อความแล้ว ตรวจแก้แต่ละช่องได้เลย';
+ for(const [key,label,selector] of slots){
+  const value=Array.isArray(parts[key])?parts[key].join('\n').trim():parts[key];
+  if(!value)continue;
+  const i=curFields.findIndex(f=>f.el.matches(selector));
+  if(i<0){missing.push(label);continue;}
+  const f=curFields[i];
+  f.el.textContent=value; f.el.dataset.copyField=f.role;
+  const box=copyFields.querySelector(`[data-idx="${i}"]`);
+  if(box) box.value=value;
+  if(copyAll.checked) spread(f.role,value);
+ }
+ checkSoon();
+ copyNotice.textContent=missing.length?'เทมเพลตนี้ไม่มีช่อง '+missing.join(', ')+' — ข้อความต้นฉบับยังอยู่ครบ':'แยกข้อความแล้ว ตรวจแก้แต่ละช่องได้เลย';
 };
+
 function copyOverflow(slide){
  const r=slide.getBoundingClientRect();
  if(slide.scrollHeight>slide.clientHeight+2)return true;
@@ -3093,15 +3320,11 @@ document.getElementById('copyFit').onclick=async()=>{
  for(let step=0;step<16&&copyOverflow(slide);step++)els.forEach((el,i)=>el.style.fontSize=Math.max(Math.min(28,sizes[i]),sizes[i]*(1-(step+1)*.025))+'px');
  if(copyOverflow(slide))failed++;
  }
- checkSoon();document.getElementById('copyNotice').textContent=failed?'บางแบบยังแน่นเกินไป กรุณาย่อข้อความ — ไม่มีข้อความถูกตัดทิ้ง':'จัดข้อความทุก Template แล้ว';
+ checkSoon();copyNotice.textContent=failed?'บางแบบยังแน่นเกินไป กรุณาย่อข้อความ — ไม่มีข้อความถูกตัดทิ้ง':'จัดข้อความทุก Template แล้ว';
 };
+
 selectCopy(work.firstElementChild);
-document.getElementById('copyTarget').textContent='ข้อความชุดเดียวสำหรับทุก Template';
-copyFields.querySelectorAll('textarea').forEach(el=>{el.disabled=false;el.value='';el.placeholder='ใช้กับทุก Template';});
-work.addEventListener('click',()=>{
- document.getElementById('copyTarget').textContent='ข้อความชุดเดียวสำหรับทุก Template';
- copyFields.querySelectorAll('textarea').forEach(el=>{el.disabled=false;el.value=window.sharedCopy?.[el.dataset.field]||'';});
-});
+copyNotice.textContent='ช่องข้อความจะเปลี่ยนตามเทมเพลตของสไลด์ที่เลือก';
 
 </script>
 <script>

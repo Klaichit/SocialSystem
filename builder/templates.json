@@ -245,7 +245,7 @@
           { "k": "ระยะคืนทุน", "v": "4–5 ปี" }
         ]},
         { "type": "price", "style": "margin-top:30px", "label": "ประเมินราคาให้ฟรี", "value": "ทักแชทได้เลย" },
-        { "type": "foot", "right": "24senergy.com", "mt": 26 }
+        { "type": "foot", "right": "24senergy.co.th", "mt": 26 }
       ]
     },
 
@@ -310,7 +310,7 @@
         { "type": "body", "text": "ส่งบิลค่าไฟเดือนล่าสุดมา เราคำนวณให้ฟรี" },
         { "type": "spacer" },
         { "type": "pill", "text": "ทักแชทได้เลย" },
-        { "type": "foot", "right": "24senergy.com", "mt": 44 }
+        { "type": "foot", "right": "24senergy.co.th", "mt": 44 }
       ]
     }
   ]

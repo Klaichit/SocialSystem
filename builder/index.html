@@ -164,6 +164,10 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg-soft);color
 .mockup.filled .drop{display:none}
 .mockup.bare{background:transparent}
 .mockup.grow{flex:1}
+/* กันจุด/ข้อความไปชนขอบรูป เฉพาะรูปที่วางบนสไลด์ตรง ๆ */
+.slide>.mockup{margin:32px 0}
+.slide>.mockup:first-child,.slide>.brandbar+.mockup{margin-top:0}
+.slide>.mockup:last-child{margin-bottom:0}
 
 /* ---------- headline layout parts ---------- */
 .band{background:var(--brand);color:#fff;padding:44px 84px;margin:0 -84px}
@@ -653,7 +657,7 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg-soft);color
     {
       "id": "m5", "group": "misc", "name": "ข่าวสาร", "classes": [],
       "blocks": [
-        { "type": "meta", "pill": "ข่าวพลังงาน", "date": "05.09.2026" },
+        { "type": "meta", "pill": "ข่าวพลังงาน" },
         { "type": "rule" },
         { "type": "head", "size": "sm", "text": "กกพ. ปรับโครงสร้างค่า Ft งวดใหม่ กระทบภาคอุตสาหกรรมอย่างไร" },
         { "type": "body", "text": "สรุปสาระสำคัญและผลกระทบต่อต้นทุนพลังงานของโรงงาน ในสามประเด็นหลัก" },
@@ -708,7 +712,7 @@ const R = {
   head:    b => `<div class="head ${b.size||''}"${st(b)}${ed}>${b.text}</div>`,
   body:    b => `<div class="body ${b.size||''}"${st(b)}${ed}>${b.text}</div>`,
   pill:    b => `<div class="pill"${st(b)}${ed}>${b.text}</div>`,
-  date:    b => `<div class="date"${st(b)}${ed}>${b.text}</div>`,
+  date:    b => b.text ? `<div class="date"${st(b)}${ed}>${b.text}</div>` : '',
   halfk:   b => `<div class="half-k"${st(b)}${ed}>${b.text}</div>`,
   source:  b => `<div class="source"${st(b)}${ed}>${b.text}</div>`,
   idx:     b => `<div class="idx"${st(b)}${ed}>${b.text}</div>`,
@@ -719,7 +723,8 @@ const R = {
   spacer:  b => `<div class="spacer"${b.flex?` style="flex:${b.flex}"`:''}></div>`,
   gap:     b => `<div style="height:${b.h||40}px"></div>`,
 
-  meta: b => `<div class="meta"${st(b)}><span class="pill"${ed}>${b.pill}</span><span class="date"${ed}>${b.date}</span></div>`,
+  meta: b => `<div class="meta"${st(b)}><span class="pill"${ed}>${b.pill}</span>`
+           + (b.date ? `<span class="date"${ed}>${b.date}</span>` : '') + `</div>`,
 
   mockup: b => `<div class="mockup ${(b.mod||[]).join(' ')}"${st(b)}><span class="drop">${b.label||'ลากรูปมาวาง'}</span></div>`,
 
@@ -859,7 +864,7 @@ function renumber(){
 }
 
 /* ===== overflow / overlap checker ===== */
-const WATCH = '.head,.body,.quote,.bigword,.stat,.stat-cap,.tf,.chk,.col-v,.dot-t,.specs,.speclist,.price,.foot,.source,.pill,.qmark,.idx';
+const WATCH = '.head,.body,.quote,.bigword,.stat,.stat-cap,.tf,.chk,.col-v,.dot-t,.specs,.speclist,.price,.foot,.source,.pill,.qmark,.idx,.mockup';
 
 function checkFit(slot){
   const slide = slot.querySelector('.slide');

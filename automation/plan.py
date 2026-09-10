@@ -22,7 +22,7 @@ DEFAULT_PLAN = ["h1", "m2", "h8", "m6"]
 
 # ลำดับบล็อกที่ต้องเติมข้อความในแต่ละเทมเพลต (index อ้างจาก builder/templates.json)
 SLOTS = {
-    "h1":  {"eyebrow": 0, "head": 2, "foot": 4},
+    "h1":  {"eyebrow": 0, "head": 2},
     "m1":  {"pill": 0, "head": 1, "body": 2},
     "m2":  {"eyebrow": 0, "head": 2, "body": 3},
     "m3":  {"stat": 1},
@@ -31,8 +31,6 @@ SLOTS = {
     "h8":  {"eyebrow": 0, "head": 2, "checklist": 3},
     "h12": {"eyebrow": 0, "head": 1, "dots": 2},
 }
-
-TH_MONTH = "ม.ค. ก.พ. มี.ค. เม.ย. พ.ค. มิ.ย. ก.ค. ส.ค. ก.ย. ต.ค. พ.ย. ธ.ค.".split()
 
 def jlist(v):
     """multi_select เก็บมาเป็นสตริง JSON"""
@@ -43,13 +41,6 @@ def jlist(v):
         return out if isinstance(out, list) else [v]
     except (ValueError, TypeError):
         return [v]
-
-def thai_month(iso):
-    """2026-09-19 -> ก.ย. 2569"""
-    m = re.match(r"(\d{4})-(\d{2})", iso or "")
-    if not m:
-        return ""
-    return f"{TH_MONTH[int(m.group(2)) - 1]} {int(m.group(1)) + 543}"
 
 def safe(name, limit=52):
     """ชื่อโฟลเดอร์/ไฟล์ที่ Windows กับ Drive รับได้
@@ -96,12 +87,13 @@ def build(row):
         s = SLOTS.get(tpl, {})
         b = {}
         if tpl == "h1":
+            # foot ปล่อยค่าเริ่มต้น "ดูต่อ →" ตามกฎใน CLAUDE.md
             b = {s["eyebrow"]: {"text": eyebrow},
-                 s["head"]: {"text": cover.replace("\n", "<br>")},
-                 s["foot"]: {"right": "ปัดต่อ →"}}
+                 s["head"]: {"text": cover.replace("\n", "<br>")}}
             name = "ปก"
         elif tpl == "m5":
-            b = {s["meta"]: {"pill": kind or "ข่าว", "date": thai_month(pubdate)},
+            # ช่องขวาของ meta ใส่หมวด ไม่ใส่วันที่ — โพสต์ถูกอ่านย้อนหลังเป็นปี
+            b = {s["meta"]: {"pill": kind or "ข่าว", "date": cats[0] if cats else ""},
                  s["head"]: {"text": safe(title, 46), "size": "sm"},
                  s["body"]: {"text": summary, "size": "sm"}}
             if source:

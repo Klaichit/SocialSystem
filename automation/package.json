@@ -1,0 +1,7 @@
+{
+  "name": "socialsystem-automation",
+  "private": true,
+  "type": "module",
+  "scripts": {"test": "python -m unittest discover -s tests"},
+  "dependencies": {"playwright": "1.58.2"}
+}

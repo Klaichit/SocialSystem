@@ -1,5 +1,8 @@
 # automation
 
+ระบบตรวจสถานะ Notion และอัปโหลด PNG เข้า Drive โดยตรง: ดู [WORKER.md](WORKER.md)
+ใช้ `worker.py` กับ `worker.config.json` สำหรับระบบใหม่ที่ทำงานต่อเนื่อง
+
 ตัวเรนเดอร์แบบไม่ต้องเปิดเบราว์เซอร์ สำหรับรอบทำภาพอัตโนมัติ
 
 ## render.mjs

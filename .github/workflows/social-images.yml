@@ -1,0 +1,47 @@
+name: Notion to social image
+on:
+  workflow_dispatch:
+  schedule:
+    # UTC: 00:17, 03:17, ... = Thailand 07:17, 10:17, 13:17, 16:17,
+    # 19:17, 22:17, 01:17, 04:17. Avoid the busiest minute of each hour.
+    - cron: '17 */3 * * *'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: socialsystem-image-worker
+  cancel-in-progress: false
+
+jobs:
+  render:
+    if: vars.SOCIAL_IMAGES_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+      GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+      GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+      GOOGLE_REFRESH_TOKEN: ${{ secrets.GOOGLE_REFRESH_TOKEN }}
+      DRIVE_STATE_FILE_ID: ${{ secrets.DRIVE_STATE_FILE_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Check required configuration
+        run: |
+          python - <<'PY'
+          import os
+          required = ['NOTION_TOKEN', 'GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'GOOGLE_REFRESH_TOKEN', 'DRIVE_STATE_FILE_ID']
+          missing = [key for key in required if not os.environ.get(key)]
+          if missing:
+              raise SystemExit('Missing repository secrets: ' + ', '.join(missing))
+          PY
+      - run: npm ci --prefix automation
+      - run: npx --prefix automation playwright install --with-deps chromium
+      - name: Process approved posts
+        run: python -X utf8 automation/worker.py --once

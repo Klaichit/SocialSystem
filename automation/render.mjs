@@ -30,7 +30,8 @@ const job = JSON.parse(readFileSync(jobPath, 'utf8'));
 const outDir = resolve(outDirArg || job.outDir || '.');
 mkdirSync(outDir, { recursive: true });
 
-const browser = await chromium.launch();
+const browser = await chromium.launch({ ...(process.env.CHROME_PATH ? { executablePath: process.env.CHROME_PATH } : {}) });
+try {
 const page = await browser.newPage({ viewport: { width: 1200, height: 1600 }, deviceScaleFactor: 1 });
 const errors = [];
 page.on('pageerror', e => errors.push(String(e)));
@@ -60,8 +61,10 @@ const written = [];
 for (const [i, slide] of job.slides.entries()) {
   const n = String(i + 1).padStart(2, '0');
   const res = await page.evaluate(({ slide, ratio }) => {
+    if (ratio === '16:9') RATIOS['16:9'] = [1920, 1080];
+    if (ratio && !RATIOS[ratio]) return { error: 'Unsupported ratio: ' + ratio };
     applyRatio(ratio || '4:5');
-    const base = BY_ID[slide.template];
+    const base = slide.templateData || BY_ID[slide.template];
     if (!base) return { error: 'ไม่รู้จักเทมเพลต ' + slide.template };
     // deep clone แล้วทับค่าตาม blocks ที่ job ส่งมา (index ตรงกับลำดับบล็อกในเทมเพลต)
     const t = JSON.parse(JSON.stringify(base));
@@ -90,6 +93,20 @@ for (const [i, slide] of job.slides.entries()) {
   if (res.error) { console.error('ERROR', res.error); await browser.close(); process.exit(2); }
 
   await page.evaluate(() => document.fonts.ready);
+  const fit = await page.evaluate(() => {
+    const el = document.querySelector('#shotHost .slide');
+    const bounds = el.getBoundingClientRect();
+    const outside = [...el.querySelectorAll('*')].some(child => {
+      const rect = child.getBoundingClientRect();
+      return rect.width && rect.height && (rect.right > bounds.right + 2 || rect.left < bounds.left - 2 ||
+        rect.bottom > bounds.bottom + 2 || rect.top < bounds.top - 2);
+    });
+    const fontsFailed = [...document.fonts].some(font => font.status === 'error');
+    return { overflow: outside || el.scrollHeight > el.clientHeight + 2 || el.scrollWidth > el.clientWidth + 2,
+      h: el.scrollHeight, ch: el.clientHeight, fontsFailed };
+  });
+  Object.assign(res, fit);
+  if (fit.fontsFailed) throw new Error('Font download failed; retry when Google Fonts is reachable');
   const el = await page.$('#shotHost .slide');
   const name = `${n} ${(slide.name || 'slide').replace(/[\\/:*?"<>|]/g, '-')}.png`;
   const file = join(outDir, name);
@@ -100,3 +117,6 @@ for (const [i, slide] of job.slides.entries()) {
 
 await browser.close();
 console.log(JSON.stringify({ outDir, logoNote, slides: written, pageErrors: errors }, null, 2));
+} finally {
+  await browser.close();
+}

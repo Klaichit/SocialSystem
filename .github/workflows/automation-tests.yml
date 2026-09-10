@@ -1,0 +1,29 @@
+name: Automation tests
+on:
+  pull_request:
+    paths: ['automation/**', 'builder/**', '.github/workflows/**']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: npm ci --prefix automation
+      - run: npx --prefix automation playwright install --with-deps chromium
+      - run: python -X utf8 -m unittest discover -s automation/tests
+      - run: python -X utf8 automation/tests/render_smoke.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: synthetic-render-previews
+          path: automation/.runtime/smoke/**/*.png
+          retention-days: 7

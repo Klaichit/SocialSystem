@@ -5,3 +5,8 @@ Thumbs.db
 .obsidian/workspace*.json
 .obsidian/cache
 node_modules/
+.env
+.env.*
+!.env.example
+automation/.runtime/
+__pycache__/
